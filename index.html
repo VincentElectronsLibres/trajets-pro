@@ -406,7 +406,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #
     <div class="info-sec">
       <h3>👤 Auteur</h3>
       <p>Développé par <strong>Vincent</strong> — ASBL Electrons Libres<br>
-      Contact : <a href="mailto:linstit@gmail.com" style="color:#0A84FF;">linstit@gmail.com</a></p>
+      Contact : <a href="mailto:vincent.dessart@electronslibres.info" style="color:#0A84FF;">vincent.dessart@electronslibres.info</a></p>
     </div>
     <div class="info-foot">Trajets professionnels v1.0.0 · ASBL Electrons Libres · 2026</div>
   </div>
@@ -414,7 +414,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ============================================================
 // CONSTANTES
 // ============================================================
@@ -945,16 +945,4 @@ document.getElementById('m-del').addEventListener('click', function() {
   trajets.splice(editIdx,1);
   saveData(); buildGrid(); renderParams();
   document.getElementById('modal').classList.remove('open');
-  toast('Trajet supprimé');
-});
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW:', e); });
-  });
-}
-</script>
-</body>
-</html>
+  toast('Trajet supprimé
