@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trajets Pro">
+<meta name="theme-color" content="#0A84FF">
+<title>Trajets professionnels</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+
+:root {
+  --blue: #0A84FF; --blue-dark: #0051CC; --blue-light: #E8F3FF; --blue-mid: #C5DFFF;
+  --red: #FF3B30; --green: #34C759; --orange: #FF9500;
+  --bg: #F2F4F8; --card: #FFFFFF; --text: #0D1117; --text2: #6B7280; --text3: #9CA3AF;
+  --border: #E5E9F0; --shadow: 0 2px 12px rgba(10,132,255,0.08); --shadow-lg: 0 8px 32px rgba(10,132,255,0.15);
+  --radius: 16px; --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); }
+
+
+.info-btn { background: var(--blue-light); border: none; font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 10px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.info-btn:active { background: var(--blue-mid); }
+.info-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 400; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
+.info-panel.open { display: flex; }
+.info-content { background: var(--bg); border-radius: 24px 24px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom,0px) + 32px); width: 100%; max-width: 430px; max-height: 85vh; overflow-y: auto; }
+.info-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.info-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.info-header h2 { font-size: 20px; font-weight: 700; }
+.info-close { background: var(--border); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.info-version { display: inline-block; background: var(--blue-light); color: var(--blue); font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 20px; }
+.info-section { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.info-section h3 { font-size: 13px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.info-section p, .info-section li { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.info-section ul { padding-left: 18px; }
+.info-section li { margin-bottom: 4px; }
+.info-meta { font-size: 12px; color: var(--text3); text-align: center; margin-top: 16px; }
+
+
+.login-screen {
+  position: fixed; inset: 0; background: linear-gradient(160deg, #0A84FF 0%, #0051CC 100%);
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 32px; z-index: 999;
+}
+.login-screen.hidden { display: none !important; }
+
+/* SETUP */
+.setup-screen {
+  position: fixed; inset: 0; background: linear-gradient(160deg, #0A84FF 0%, #0051CC 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 32px; z-index: 1000; transition: opacity 0.4s;
+}
+.setup-screen.hidden { display: none !important; }
+.setup-logo-img { height: 60px; margin-bottom: 16px; filter: brightness(0) invert(1); }
+.setup-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 6px; text-align: center; }
+.setup-sub { font-size: 14px; color: rgba(255,255,255,0.75); margin-bottom: 32px; text-align: center; }
+.setup-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 360px; }
+.setup-card label { font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px; }
+.setup-card input { width: 100%; font-size: 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text); outline: none; margin-bottom: 16px; }
+.setup-card input:focus { border-color: var(--blue); }
+.setup-btn { width: 100%; padding: 15px; border-radius: var(--radius-sm); background: var(--blue); color: #fff; font-size: 16px; font-weight: 600; border: none; cursor: pointer; }
+
+/* APP */
+.app { height: 100vh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; }
+
+/* HEADER */
+.header {
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: env(safe-area-inset-top, 12px) 20px 0; border-bottom: 0.5px solid var(--border); flex-shrink: 0;
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; }
+.header-title-text { font-size: 17px; font-weight: 700; color: var(--text); }
+.header-user { font-size: 13px; color: var(--blue); font-weight: 500; background: var(--blue-light); padding: 5px 12px; border-radius: 20px; cursor: pointer; }
+.tab-bar { display: flex; }
+.tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 500; color: var(--text3); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px 40px; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* DATE + NAV */
+.date-card {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-lg);
+}
+.month-nav { display: flex; align-items: center; gap: 8px; }
+.nav-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.nav-btn:active { background: rgba(255,255,255,0.35); }
+.month-label { font-size: 15px; font-weight: 700; color: #fff; min-width: 100px; text-align: center; }
+.date-right { text-align: right; }
+.date-label-small { font-size: 11px; color: rgba(255,255,255,0.7); }
+.date-input { font-size: 14px; border: none; background: transparent; color: #fff; font-weight: 600; outline: none; text-align: right; }
+.date-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.8; width: 14px; }
+
+.section-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; padding-left: 2px; }
+
+/* TRAJETS */
+.trajet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.trajet-btn {
+  padding: 14px 12px; border-radius: var(--radius); border: none; background: var(--card);
+  cursor: pointer; text-align: left; box-shadow: var(--shadow); transition: all 0.15s; position: relative; overflow: hidden;
+}
+.trajet-btn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--blue); border-radius: 3px 0 0 3px; }
+.trajet-btn:active { transform: scale(0.97); background: var(--blue-light); }
+.trajet-btn .route { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.trajet-btn .km { font-size: 11px; color: var(--blue); font-weight: 500; margin-top: 4px; }
+.trajet-btn.autre { border: 1.5px dashed var(--blue-mid); box-shadow: none; }
+.trajet-btn.autre::before { display: none; }
+.trajet-btn.autre .route { color: var(--text2); }
+.trajet-btn.autre .km { color: var(--text3); }
+
+/* AUTRE */
+.autre-section { display: none; background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow); border-left: 3px solid var(--blue); }
+.autre-section.visible { display: block; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; }
+.form-input { width: 100%; font-size: 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text); outline: none; background: var(--bg); margin-bottom: 12px; transition: border-color 0.2s; }
+.form-input:focus { border-color: var(--blue); background: #fff; }
+
+/* STATS */
+.stats-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.stat-card { background: var(--card); border-radius: var(--radius-sm); padding: 12px 10px; box-shadow: var(--shadow); text-align: center; }
+.s-label { font-size: 10px; color: var(--text3); font-weight: 500; margin-bottom: 4px; }
+.s-value { font-size: 20px; font-weight: 700; color: var(--text); }
+.stat-card.highlight .s-value { color: var(--blue); }
+.stat-card.money .s-value { color: var(--green); font-size: 17px; }
+
+/* REMBOURSEMENT CARD */
+.remb-card {
+  background: linear-gradient(135deg, #34C759, #28a745);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 16px rgba(52,199,89,0.3);
+}
+.remb-label { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; }
+.remb-amount { font-size: 24px; font-weight: 700; color: #fff; }
+.remb-detail { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+/* ENTRIES */
+.entry-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.entry-item { display: flex; align-items: center; padding: 10px 14px; background: var(--card); border-radius: var(--radius-sm); box-shadow: var(--shadow); border-left: 3px solid var(--blue-mid); }
+.entry-date { font-size: 11px; color: var(--text3); font-weight: 500; }
+.entry-route { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 1px; }
+.entry-km { font-size: 14px; font-weight: 700; color: var(--blue); white-space: nowrap; margin-left: 10px; }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--red); font-size: 18px; padding: 0 0 0 8px; opacity: 0.7; }
+
+/* MAIL + XLS */
+.action-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+.action-card label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px; }
+.btn-primary { display: block; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color: #fff; font-size: 15px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(10,132,255,0.3); margin-bottom: 8px; }
+.btn-primary:active { opacity: 0.85; }
+.btn-primary:disabled { background: var(--border); box-shadow: none; color: var(--text3); }
+.btn-green { display: block; width: 100%; padding: 14px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #34C759, #28a745); color: #fff; font-size: 15px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(52,199,89,0.3); }
+.btn-green:active { opacity: 0.85; }
+.btn-secondary { display: block; width: 100%; padding: 12px; border-radius: var(--radius-sm); background: var(--blue-light); color: var(--blue); font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-top: 8px; }
+.btn-add { padding: 10px 16px; border-radius: var(--radius-sm); background: var(--blue); color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+.month-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.empty-state { text-align: center; padding: 40px 16px; color: var(--text3); font-size: 14px; }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+/* PARAMS */
+.param-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.param-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--card); border-radius: var(--radius-sm); box-shadow: var(--shadow); }
+.param-item.dragging { opacity: 0.4; }
+.param-item.drag-over { outline: 2px solid var(--blue); }
+.drag-handle { display: flex; flex-direction: column; gap: 3px; padding-right: 4px; cursor: grab; opacity: 0.35; }
+.drag-handle span { display: block; width: 15px; height: 2px; background: var(--text); border-radius: 2px; }
+.param-label { flex: 1; font-size: 14px; font-weight: 500; }
+.param-km { font-size: 13px; font-weight: 700; color: var(--blue); min-width: 50px; text-align: right; }
+.edit-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 17px; padding: 0 0 0 8px; }
+.add-form { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.add-row { display: flex; gap: 8px; align-items: flex-end; }
+.add-row .form-input { flex: 1; margin-bottom: 0; }
+.param-sep { height: 1px; background: var(--border); margin: 16px 0; }
+.settings-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 10px; }
+.settings-card label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px; }
+.hint { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.change-user-btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); background: #FFF0EF; color: var(--red); font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-top: 6px; }
+
+/* TOAST */
+.toast { position: fixed; bottom: calc(env(safe-area-inset-bottom,0px) + 20px); left: 50%; transform: translateX(-50%); background: rgba(13,17,23,0.88); color: #fff; border-radius: 24px; padding: 11px 22px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 500; white-space: nowrap; pointer-events: none; backdrop-filter: blur(10px); }
+.toast.show { opacity: 1; }
+.toast.success { background: rgba(52,199,89,0.95); }
+.toast.error { background: rgba(255,59,48,0.95); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg); border-radius: 24px 24px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom,0px) + 28px); width: 100%; max-width: 430px; }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 18px; }
+.modal-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.modal-btns button { width: 100%; padding: 14px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
+.btn-modal-save { background: var(--blue); color: #fff; }
+.btn-modal-delete { background: #FFF0EF; color: var(--red); }
+.btn-modal-cancel { background: var(--border); color: var(--text2); }
+
+</style>
+</head>
+<body>
+
+
+<div class="setup-screen" id="setup-screen">
+  
+  <div class="setup-title">Trajets professionnels</div>
+  <div class="setup-sub">Suivi kilométrique — Commune de Nandrin</div>
+  <div class="setup-card">
+    <label>Ton prénom</label>
+    <input type="text" id="setup-name" placeholder="Ex : Vincent" autocomplete="given-name" />
+    <label>Ton adresse e-mail</label>
+    <input type="email" id="setup-email" placeholder="ton@email.com" autocomplete="email" />
+    <label>Mot de passe</label>
+    <input type="password" id="setup-password" placeholder="Choisis un mot de passe" autocomplete="new-password" />
+    <button class="setup-btn" onclick="setupUser()">Commencer →</button>
+  </div>
+</div>
+
+<div class="app" id="app" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title-text">Trajets professionnels</div>
+      <button class="info-btn" type="button" onclick="document.getElementById('info-panel').classList.toggle('open')">ℹ️</button>
+      <div class="header-user" id="header-user" onclick="showScreen('parametres', document.querySelectorAll('.tab')[2])"></div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="showScreen('encoder',this)">+ Trajet</button>
+      <button class="tab" onclick="showScreen('historique',this)">Historique</button>
+      <button class="tab" onclick="showScreen('parametres',this)">Paramètres</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ENCODER -->
+    <div id="screen-encoder" class="screen active">
+      <div class="date-card">
+        <div class="month-nav">
+          <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+          <div class="month-label" id="current-month-label"></div>
+          <button class="nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="date-right">
+          <div class="date-label-small">Date du trajet</div>
+          <input type="date" id="date-input" class="date-input" />
+        </div>
+      </div>
+      <div class="section-label">Sélectionne un trajet</div>
+      <div class="trajet-grid" id="trajet-grid"></div>
+      <div class="autre-section" id="autre-section">
+        <label class="form-label">Description</label>
+        <input type="text" id="autre-desc" class="form-input" placeholder="Ex : Réunion à Liège" />
+        <label class="form-label">Kilomètres</label>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <input type="number" id="autre-km" class="form-input" placeholder="km" min="0" style="flex:1;margin-bottom:0;" />
+          <button class="btn-add" onclick="confirmAutre()">Confirmer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIQUE -->
+    <div id="screen-historique" class="screen">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="s-label">Trajets</div><div class="s-value" id="stat-count">0</div></div>
+        <div class="stat-card highlight"><div class="s-label">Km mois</div><div class="s-value" id="stat-km">0</div></div>
+        <div class="stat-card money"><div class="s-label">Remboursement</div><div class="s-value" id="stat-remb">0 €</div></div>
+      </div>
+      <div class="remb-card">
+        <div>
+          <div class="remb-label">Remboursement estimé</div>
+          <div class="remb-detail" id="remb-detail"></div>
+        </div>
+        <div class="remb-amount" id="remb-amount">0,00 €</div>
+      </div>
+      <div class="month-title" id="month-title"></div>
+      <div class="entry-list" id="entry-list"></div>
+      <div class="action-card">
+        <label>Envoyer le relevé</label>
+        <input type="email" id="mail-to" class="form-input" style="margin-bottom:10px;" />
+        <button class="btn-primary" id="send-btn" type="button">📧 Envoyer par e-mail</button>
+        <button class="btn-green" id="xls-btn" type="button" onclick="generateXLS()">📊 Générer le fichier XLS</button>
+      </div>
+    </div>
+
+    <!-- PARAMETRES -->
+    <div id="screen-parametres" class="screen">
+      <div class="section-label">Trajets enregistrés</div>
+      <p class="hint">Glisse ≡ pour réordonner — touche ✎ pour modifier ou supprimer</p>
+      <div class="param-list" id="param-list"></div>
+      <div class="add-form">
+        <label class="form-label">Nouveau trajet</label>
+        <input type="text" id="new-label" class="form-input" placeholder="Ex : Domicile → Nandrin" />
+        <div class="add-row">
+          <div style="flex:1;">
+            <label class="form-label">Kilomètres</label>
+            <input type="number" id="new-km" class="form-input" placeholder="km" min="0" style="margin-bottom:0;" />
+          </div>
+          <button class="btn-add" onclick="addTrajet()" style="align-self:flex-end;">Ajouter</button>
+        </div>
+      </div>
+      <div class="param-sep"></div>
+      <div class="settings-card">
+        <label>Index kilométrique (€/km)</label>
+        <input type="number" id="param-index" class="form-input" placeholder="0.4327" step="0.0001" min="0" />
+        <button class="btn-secondary" onclick="saveIndex()">Enregistrer l'index</button>
+      </div>
+      <div class="settings-card">
+        <label>Mon adresse e-mail</label>
+        <input type="email" id="param-mail" class="form-input" />
+        <button class="btn-secondary" onclick="saveMail()">Enregistrer l'adresse</button>
+      </div>
+      <div class="settings-card">
+        <label>Mon prénom</label>
+        <input type="text" id="param-name" class="form-input" />
+        <button class="btn-secondary" onclick="saveName()">Enregistrer le prénom</button>
+      </div>
+      <button class="change-user-btn" onclick="changeUser()">Changer d'utilisateur</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Modifier le trajet</h3>
+    <label class="form-label">Libellé</label>
+    <input type="text" id="modal-label" class="form-input" />
+    <label class="form-label">Kilomètres</label>
+    <input type="number" id="modal-km" class="form-input" min="0" />
+    <div class="modal-btns">
+      <button class="btn-modal-save" onclick="saveModal()">Enregistrer</button>
+      <button class="btn-modal-delete" onclick="deleteTrajet()">Supprimer ce trajet</button>
+      <button class="btn-modal-cancel" onclick="closeModal()">Annuler</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+
+<script>
+
+const EMAILJS_SERVICE = 'service_rhzyr4l';
+const EMAILJS_TEMPLATE = 'template_74evcpi';
+const EMAILJS_KEY = 'snAgrIZiO5bEOOF56';
+
+const DEFAULT_TRAJETS = [
+  { label: "Villers → St-Séverin", km: 8 },
+  { label: "St-Séverin → Villers", km: 8 },
+  { label: "Villers → Botty", km: 5 },
+  { label: "St-Séverin → Botty", km: 6 },
+  { label: "Botty → Villers", km: 5 },
+  { label: "Botty → St-Séverin", km: 6 },
+  { label: "Domicile → Botty", km: 12 },
+  { label: "Domicile → St-Séverin", km: 15 },
+];
+
+const FULL_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const SHORT_MONTHS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+let currentUser = null, userName = '', mailTo = '';
+let trajets = [], entries = [];
+let kmIndex = 0.4327;
+let editIdx = -1, dragSrcIdx = -1;
+
+// Current viewed month (0-indexed)
+let viewYear = new Date().getFullYear();
+let viewMonth = new Date().getMonth();
+
+function userKey(k) { return `km_${currentUser}_${k}`; }
+function saveTrajets() { localStorage.setItem(userKey('trajets'), JSON.stringify(trajets)); }
+function saveEntries() { localStorage.setItem(userKey('entries'), JSON.stringify(entries)); }
+
+function loadUser(name, email) {
+  currentUser = name.toLowerCase().replace(/\s+/g, '_');
+  userName = name;
+  mailTo = localStorage.getItem(userKey('mail')) || email || '';
+  kmIndex = parseFloat(localStorage.getItem(userKey('index')) || '0.4327');
+  trajets = JSON.parse(localStorage.getItem(userKey('trajets')) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TRAJETS));
+  entries = JSON.parse(localStorage.getItem(userKey('entries')) || '[]');
+  if (!localStorage.getItem(userKey('mail')) && email) localStorage.setItem(userKey('mail'), email);
+  document.getElementById('header-user').textContent = '👤 ' + userName;
+  document.getElementById('mail-to').value = mailTo;
+  document.getElementById('param-mail').value = mailTo;
+  document.getElementById('param-name').value = userName;
+  document.getElementById('param-index').value = kmIndex;
+  updateMonthLabel();
+  buildGrid();
+}
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash.toString();
+}
+
+function setupUser() {
+  const name = document.getElementById('setup-name').value.trim();
+  const email = document.getElementById('setup-email').value.trim();
+  const password = document.getElementById('setup-password').value;
+  if (!name) { showToast('Entre ton prénom'); return; }
+  if (!password || password.length < 4) { showToast('Mot de passe trop court (min. 4 caractères)'); return; }
+  const userKey2 = name.toLowerCase().replace(/\s+/g, '_');
+  localStorage.setItem('km_last_user', name);
+  localStorage.setItem('km_last_email', email);
+  localStorage.setItem('km_pwd_' + userKey2, simpleHash(password));
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('app').style.display = 'flex';
+  loadUser(name, email);
+}
+
+function loginUser() {
+  const password = document.getElementById('login-password').value;
+  const name = localStorage.getItem('km_last_user');
+  const userKey2 = name.toLowerCase().replace(/\s+/g, '_');
+  const stored = localStorage.getItem('km_pwd_' + userKey2);
+  if (stored && simpleHash(password) === stored) {
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    loadUser(name, localStorage.getItem('km_last_email') || '');
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-password').value = '';
+  }
+}
+
+function forgotPassword() {
+  if (confirm('Réinitialiser le mot de passe ? Toutes tes données seront conservées.')) {
+    const name = localStorage.getItem('km_last_user');
+    const userKey2 = name.toLowerCase().replace(/\s+/g, '_');
+    localStorage.removeItem('km_pwd_' + userKey2);
+    localStorage.removeItem('km_last_user');
+    localStorage.removeItem('km_last_email');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('setup-screen').classList.remove('hidden');
+  }
+}
+
+function changeUser() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('setup-name').value = '';
+  document.getElementById('setup-email').value = '';
+  const pwd = document.getElementById('setup-password');
+  if (pwd) pwd.value = '';
+  document.getElementById('setup-screen').classList.remove('hidden');
+}
+
+const lastUser = localStorage.getItem('km_last_user');
+if (lastUser) {
+  const userKey2 = lastUser.toLowerCase().replace(/\s+/g, '_');
+  const hasPwd = localStorage.getItem('km_pwd_' + userKey2);
+  if (hasPwd) {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('login-title').textContent = 'Bonjour ' + lastUser + ' !';
+    document.getElementById('login-sub').textContent = 'Entre ton mot de passe pour continuer';
+    const ls = document.getElementById('login-screen');
+    ls.classList.remove('hidden');
+    ls.style.display = 'flex';
+  } else {
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('app').style.display = 'flex';
+    loadUser(lastUser, localStorage.getItem('km_last_email') || '');
+  }
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function showScreen(name, tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (tab) tab.classList.add('active');
+  if (name === 'historique') renderHistory();
+  if (name === 'parametres') renderParams();
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function formatDate(str) { const [y,m,d] = str.split('-'); return d+'/'+m+'/'+y; }
+function padZ(n) { return String(n).padStart(2,'0'); }
+function viewMonthStr() { return `${viewYear}-${padZ(viewMonth+1)}`; }
+
+function updateMonthLabel() {
+  document.getElementById('current-month-label').textContent = FULL_MONTHS[viewMonth] + ' ' + viewYear;
+  // Set date input default to first day of viewed month or today if current month
+  const today = new Date();
+  if (viewYear === today.getFullYear() && viewMonth === today.getMonth()) {
+    document.getElementById('date-input').value = todayStr();
+  } else {
+    document.getElementById('date-input').value = `${viewYear}-${padZ(viewMonth+1)}-01`;
+  }
+}
+
+function changeMonth(dir) {
+  viewMonth += dir;
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  updateMonthLabel();
+}
+
+document.getElementById('send-btn').addEventListener('click', sendMail);
+
+function buildGrid() {
+  const grid = document.getElementById('trajet-grid');
+  grid.innerHTML = '';
+  trajets.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'trajet-btn';
+    btn.innerHTML = `<div class="route">${t.label}</div><div class="km">${t.km} km</div>`;
+    btn.addEventListener('click', () => addEntry(t.label, t.km));
+    grid.appendChild(btn);
+  });
+  const autreBtn = document.createElement('button');
+  autreBtn.className = 'trajet-btn autre';
+  autreBtn.innerHTML = `<div class="route">Autre trajet</div><div class="km">distance libre</div>`;
+  autreBtn.addEventListener('click', () => document.getElementById('autre-section').classList.toggle('visible'));
+  grid.appendChild(autreBtn);
+}
+
+function addEntry(label, km) {
+  const date = document.getElementById('date-input').value || todayStr();
+  entries.push({ date, label, km });
+  entries.sort((a,b) => b.date.localeCompare(a.date));
+  saveEntries();
+  showToast('✓ ' + label + ' — ' + km + ' km', 'success');
+}
+
+function confirmAutre() {
+  const desc = document.getElementById('autre-desc').value.trim();
+  const km = parseFloat(document.getElementById('autre-km').value);
+  if (!desc) { showToast('Ajoute une description'); return; }
+  if (!km || km <= 0) { showToast('Ajoute les kilomètres'); return; }
+  addEntry(desc, km);
+  document.getElementById('autre-desc').value = '';
+  document.getElementById('autre-km').value = '';
+  document.getElementById('autre-section').classList.remove('visible');
+}
+
+function getMonthEntries(ym) {
+  return entries.filter(e => e.date.startsWith(ym));
+}
+
+function renderHistory() {
+  const ym = viewMonthStr();
+  const me = getMonthEntries(ym);
+  const totalKm = me.reduce((s,e) => s+e.km, 0);
+  const totalRemb = totalKm * kmIndex;
+  document.getElementById('stat-count').textContent = me.length;
+  document.getElementById('stat-km').textContent = totalKm;
+  document.getElementById('stat-remb').textContent = totalRemb.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('remb-amount').textContent = totalRemb.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('remb-detail').textContent = totalKm + ' km × ' + kmIndex.toFixed(4).replace('.',',') + ' €/km';
+  document.getElementById('month-title').textContent = FULL_MONTHS[viewMonth] + ' ' + viewYear;
+  document.getElementById('mail-to').value = mailTo;
+  const list = document.getElementById('entry-list');
+  list.innerHTML = '';
+  if (me.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>Aucun trajet ce mois-ci</div>';
+    return;
+  }
+  me.forEach(e => {
+    const idx = entries.indexOf(e);
+    const div = document.createElement('div');
+    div.className = 'entry-item';
+    div.innerHTML = `<div style="flex:1;"><div class="entry-date">${formatDate(e.date)}</div><div class="entry-route">${e.label}</div></div><span class="entry-km">${e.km} km</span><button class="del-btn" data-idx="${idx}">×</button>`;
+    div.querySelector('.del-btn').addEventListener('click', () => deleteEntry(idx));
+    list.appendChild(div);
+  });
+}
+
+function deleteEntry(idx) { entries.splice(idx,1); saveEntries(); renderHistory(); }
+
+function sendMail() {
+  const ym = viewMonthStr();
+  const me = getMonthEntries(ym);
+  const to = document.getElementById('mail-to').value.trim();
+  const mn = FULL_MONTHS[viewMonth];
+  if (me.length === 0) { showToast('Aucun trajet à envoyer'); return; }
+  if (!to) { showToast('Indique une adresse e-mail'); return; }
+  const totalKm = me.reduce((s,e) => s+e.km, 0);
+  const totalRemb = (totalKm * kmIndex).toFixed(2).replace('.',',');
+  let message = `Relevé kilométrique — ${userName}\n${mn} ${viewYear}\n\n`;
+  me.forEach(e => { message += `${formatDate(e.date)}  |  ${e.label}  |  ${e.km} km\n`; });
+  message += `\nTOTAL : ${totalKm} km`;
+  message += `\nIndex : ${kmIndex.toFixed(4).replace('.',',')} €/km`;
+  message += `\nREMBOURSEMENT : ${totalRemb} €`;
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  try {
+    emailjs.init(EMAILJS_KEY);
+    emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
+      to_email: to,
+      subject: `Relevé km — ${userName} — ${mn} ${viewYear}`,
+      message
+    }).then(() => {
+      showToast('✓ Mail envoyé !', 'success');
+      btn.disabled = false; btn.textContent = '📧 Envoyer par e-mail';
+    }).catch(err => {
+      console.error('EmailJS error:', err);
+      showToast('Erreur envoi: ' + (err.text || JSON.stringify(err)), 'error');
+      btn.disabled = false; btn.textContent = '📧 Envoyer par e-mail';
+    });
+  } catch(e) {
+    showToast('Erreur: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = '📧 Envoyer par e-mail';
+  }
+}
+
+function generateXLS() {
+  const ym = viewMonthStr();
+  const me = getMonthEntries(ym);
+  if (me.length === 0) { showToast('Aucun trajet ce mois-ci'); return; }
+  const totalKm = me.reduce((s,e) => s+e.km, 0);
+  const mn = FULL_MONTHS[viewMonth];
+
+  const wb = XLSX.utils.book_new();
+  const wsData = [
+    ['', '', '', '', '', new Date()],
+    ['Note de remboursement'],
+    [],
+    ['La Commune de NANDRIN doit à :'],
+    ['NOM - Prénom', userName],
+    ['Adresse', ''],
+    ['Compte n°', ''],
+    ['TOTAL', totalKm * kmIndex, '€', 'Signature'],
+    ['T. horaire du 01/04/26 au 30/06/26', '', '', kmIndex],
+    ['', totalKm, 'KM'],
+    ['En remboursement de frais à charge'],
+    ['Date', 'DETAILS CALCULS + LIEU', '', '', '', 'KM'],
+  ];
+  me.forEach(e => {
+    wsData.push([e.date, e.label, '', '', '', e.km]);
+  });
+  wsData.push([]);
+  wsData.push(['', `TOTAL ${mn} ${viewYear}`, '', '', '', totalKm]);
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:12},{wch:35},{wch:8},{wch:8},{wch:12},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Feuil1');
+  XLSX.writeFile(wb, `Remboursement_${userName}_${mn}_${viewYear}.xlsx`);
+  showToast('✓ Fichier XLS généré !', 'success');
+}
+
+function renderParams() {
+  document.getElementById('param-mail').value = mailTo;
+  document.getElementById('param-name').value = userName;
+  document.getElementById('param-index').value = kmIndex;
+  const list = document.getElementById('param-list');
+  list.innerHTML = '';
+  trajets.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'param-item';
+    div.draggable = true;
+    div.dataset.idx = i;
+    div.innerHTML = `<div class="drag-handle"><span></span><span></span><span></span></div><span class="param-label">${t.label}</span><span class="param-km">${t.km} km</span><button class="edit-btn">✎</button>`;
+    div.querySelector('.edit-btn').addEventListener('click', () => openModal(i));
+    div.addEventListener('dragstart', e => { dragSrcIdx = i; setTimeout(() => div.classList.add('dragging'), 0); e.dataTransfer.effectAllowed = 'move'; });
+    div.addEventListener('dragend', () => { div.classList.remove('dragging'); document.querySelectorAll('.param-item').forEach(el => el.classList.remove('drag-over')); });
+    div.addEventListener('dragover', e => { e.preventDefault(); document.querySelectorAll('.param-item').forEach(el => el.classList.remove('drag-over')); div.classList.add('drag-over'); });
+    div.addEventListener('drop', e => { e.preventDefault(); const ti = parseInt(div.dataset.idx); if (dragSrcIdx === ti) return; const moved = trajets.splice(dragSrcIdx, 1)[0]; trajets.splice(ti, 0, moved); saveTrajets(); buildGrid(); renderParams(); });
+    list.appendChild(div);
+  });
+}
+
+function openModal(idx) {
+  editIdx = idx;
+  document.getElementById('modal-label').value = trajets[idx].label;
+  document.getElementById('modal-km').value = trajets[idx].km;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); editIdx = -1; }
+function saveModal() {
+  const label = document.getElementById('modal-label').value.trim();
+  const km = parseFloat(document.getElementById('modal-km').value);
+  if (!label || !km) { showToast('Champs incomplets'); return; }
+  trajets[editIdx] = { label, km };
+  saveTrajets(); buildGrid(); renderParams(); closeModal();
+  showToast('Trajet modifié');
+}
+function deleteTrajet() {
+  trajets.splice(editIdx, 1);
+  saveTrajets(); buildGrid(); renderParams(); closeModal();
+  showToast('Trajet supprimé');
+}
+function addTrajet() {
+  const label = document.getElementById('new-label').value.trim();
+  const km = parseFloat(document.getElementById('new-km').value);
+  if (!label) { showToast('Ajoute un libellé'); return; }
+  if (!km || km <= 0) { showToast('Ajoute les kilomètres'); return; }
+  trajets.push({ label, km });
+  saveTrajets(); buildGrid(); renderParams();
+  document.getElementById('new-label').value = '';
+  document.getElementById('new-km').value = '';
+  showToast('Trajet ajouté', 'success');
+}
+function saveMail() {
+  mailTo = document.getElementById('param-mail').value.trim();
+  localStorage.setItem(userKey('mail'), mailTo);
+  document.getElementById('mail-to').value = mailTo;
+  showToast('Adresse enregistrée', 'success');
+}
+function saveName() {
+  userName = document.getElementById('param-name').value.trim();
+  if (!userName) return;
+  localStorage.setItem('km_last_user', userName);
+  document.getElementById('header-user').textContent = '👤 ' + userName;
+  showToast('Prénom mis à jour', 'success');
+}
+function saveIndex() {
+  const val = parseFloat(document.getElementById('param-index').value);
+  if (!val || val <= 0) { showToast('Index invalide'); return; }
+  kmIndex = val;
+  localStorage.setItem(userKey('index'), val);
+  showToast('Index mis à jour — ' + val.toFixed(4).replace('.',',') + ' €/km', 'success');
+}
+
+updateMonthLabel();
+
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(err) {
+      console.log('SW error:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
