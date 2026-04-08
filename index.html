@@ -10,367 +10,292 @@
 <title>Trajets professionnels</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./icon-192.png">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #F2F4F8; color: #0D1117; }
-
-/* ÉCRANS PLEIN ÉCRAN */
-.fullscreen {
-  position: fixed; inset: 0; z-index: 100;
-  background: linear-gradient(160deg, #0A84FF, #0051CC);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 40px 24px;
-}
-.fullscreen.hidden { display: none; }
-
-.fs-title { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 6px; text-align: center; }
-.fs-sub { font-size: 14px; color: rgba(255,255,255,0.75); margin-bottom: 32px; text-align: center; }
-.fs-card { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 360px; }
-.fs-card label { font-size: 12px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 6px; margin-top: 14px; }
-.fs-card label:first-child { margin-top: 0; }
-.fs-card input { width: 100%; font-size: 16px; border: 1.5px solid #E5E9F0; border-radius: 10px; padding: 11px 13px; color: #0D1117; outline: none; }
-.fs-card input:focus { border-color: #0A84FF; }
-.fs-btn { display: block; width: 100%; margin-top: 18px; padding: 15px; border-radius: 10px; background: #0A84FF; color: #fff; font-size: 16px; font-weight: 600; border: none; cursor: pointer; }
-.fs-link { display: block; width: 100%; margin-top: 10px; padding: 11px; background: none; border: none; color: #6B7280; font-size: 14px; cursor: pointer; text-align: center; }
-.fs-error { color: #FF3B30; font-size: 13px; margin-top: 8px; display: none; }
-
-/* APP PRINCIPALE */
-.app { height: 100vh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; }
-.app.hidden { display: none; }
-
-/* HEADER */
-.header {
-  background: #fff; border-bottom: 0.5px solid #E5E9F0; flex-shrink: 0;
-  padding: env(safe-area-inset-top, 0px) 0 0;
-}
-.header-top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
-.header-title { font-size: 18px; font-weight: 700; color: #0D1117; }
-.header-actions { display: flex; align-items: center; gap: 8px; }
-.hbtn {
-  background: #E8F3FF; border: none; border-radius: 10px;
-  padding: 8px 12px; font-size: 14px; font-weight: 500; color: #0A84FF;
-  cursor: pointer; min-height: 38px; min-width: 38px;
-  display: flex; align-items: center; justify-content: center;
-}
-.hbtn:active { background: #C5DFFF; }
-
-/* TABS */
-.tabs { display: flex; border-top: 0.5px solid #E5E9F0; }
-.tab { flex: 1; padding: 10px 4px; text-align: center; font-size: 12px; font-weight: 500; color: #9CA3AF; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; }
-.tab.active { color: #0A84FF; border-bottom-color: #0A84FF; font-weight: 600; }
-
-/* CONTENU */
-.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 40px; }
-.screen { display: none; }
-.screen.active { display: block; }
-
-/* CARTE MOIS */
-.month-card {
-  background: linear-gradient(135deg, #0A84FF, #0051CC);
-  border-radius: 14px; padding: 14px 16px; margin-bottom: 14px;
-  display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 6px 20px rgba(10,132,255,0.25);
-}
-.month-nav { display: flex; align-items: center; gap: 8px; }
-.mnbtn { background: rgba(255,255,255,0.2); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.mnbtn:active { background: rgba(255,255,255,0.4); }
-.month-name { font-size: 15px; font-weight: 700; color: #fff; min-width: 110px; text-align: center; }
-.date-side { text-align: right; }
-.date-lbl { font-size: 11px; color: rgba(255,255,255,0.7); }
-.date-inp { font-size: 14px; border: none; background: transparent; color: #fff; font-weight: 600; outline: none; }
-.date-inp::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.8; width: 14px; }
-
-/* SECTION LABEL */
-.slabel { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
-
-/* GRILLE TRAJETS */
-.tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
-.tbtn {
-  padding: 13px 11px; border-radius: 13px; border: none; background: #fff;
-  cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgba(10,132,255,0.08);
-  position: relative; overflow: hidden;
-}
-.tbtn::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #0A84FF; }
-.tbtn:active { background: #E8F3FF; }
-.tbtn .tr { font-size: 12px; font-weight: 600; color: #0D1117; line-height: 1.4; }
-.tbtn .tk { font-size: 11px; color: #0A84FF; font-weight: 500; margin-top: 4px; }
-.tbtn.autre { border: 1.5px dashed #C5DFFF; box-shadow: none; background: #F9FAFB; }
-.tbtn.autre::before { display: none; }
-.tbtn.autre .tr { color: #6B7280; }
-.tbtn.autre .tk { color: #9CA3AF; }
-
-/* AUTRE FORM */
-.autre-form { display: none; background: #fff; border-radius: 13px; padding: 14px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(10,132,255,0.08); border-left: 3px solid #0A84FF; }
-.autre-form.visible { display: block; }
-.flabel { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 5px; }
-.finput { width: 100%; font-size: 16px; border: 1.5px solid #E5E9F0; border-radius: 9px; padding: 9px 11px; color: #0D1117; outline: none; background: #F9FAFB; margin-bottom: 10px; }
-.finput:focus { border-color: #0A84FF; background: #fff; }
-.frow { display: flex; gap: 8px; align-items: center; }
-.fadd { padding: 9px 16px; border-radius: 9px; background: #0A84FF; color: #fff; border: none; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-
-/* STATS */
-.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.scard { background: #fff; border-radius: 11px; padding: 11px 10px; box-shadow: 0 2px 8px rgba(10,132,255,0.08); text-align: center; }
-.scard .sl { font-size: 10px; color: #9CA3AF; font-weight: 500; margin-bottom: 3px; }
-.scard .sv { font-size: 20px; font-weight: 700; color: #0D1117; }
-.scard.blue .sv { color: #0A84FF; }
-.scard.green .sv { color: #34C759; font-size: 16px; }
-
-/* REMB CARD */
-.remb { background: linear-gradient(135deg, #34C759, #28a745); border-radius: 13px; padding: 13px 16px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 14px rgba(52,199,89,0.25); }
-.remb-left .rl { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; }
-.remb-left .rd { font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 2px; }
-.remb-amt { font-size: 24px; font-weight: 700; color: #fff; }
-
-/* LISTE ENTRÉES */
-.elist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
-.eitem { display: flex; align-items: center; padding: 10px 13px; background: #fff; border-radius: 11px; box-shadow: 0 2px 8px rgba(10,132,255,0.06); border-left: 3px solid #C5DFFF; }
-.edate { font-size: 11px; color: #9CA3AF; font-weight: 500; }
-.eroute { font-size: 13px; font-weight: 600; color: #0D1117; margin-top: 1px; }
-.ekm { font-size: 14px; font-weight: 700; color: #0A84FF; white-space: nowrap; margin-left: 10px; }
-.edel { background: none; border: none; cursor: pointer; color: #FF3B30; font-size: 20px; padding: 0 0 0 8px; opacity: 0.7; }
-.edel:active { opacity: 1; }
-.empty { text-align: center; padding: 36px 16px; color: #9CA3AF; font-size: 14px; }
-.empty-icon { font-size: 36px; margin-bottom: 8px; }
-
-/* ACTION CARDS */
-.acard { background: #fff; border-radius: 13px; padding: 15px; box-shadow: 0 2px 8px rgba(10,132,255,0.08); margin-bottom: 10px; }
-.acard-lbl { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 8px; }
-.btn-blue { display: block; width: 100%; padding: 13px; border-radius: 10px; background: linear-gradient(135deg, #0A84FF, #0051CC); color: #fff; font-size: 15px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(10,132,255,0.3); margin-bottom: 8px; }
-.btn-blue:active { opacity: 0.85; }
-.btn-blue:disabled { background: #E5E9F0; box-shadow: none; color: #9CA3AF; }
-.btn-green { display: block; width: 100%; padding: 13px; border-radius: 10px; background: linear-gradient(135deg, #34C759, #28a745); color: #fff; font-size: 15px; font-weight: 600; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(52,199,89,0.3); }
-.btn-green:active { opacity: 0.85; }
-.btn-sec { display: block; width: 100%; padding: 11px; border-radius: 10px; background: #E8F3FF; color: #0A84FF; font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-top: 8px; }
-.btn-red { display: block; width: 100%; padding: 13px; border-radius: 10px; background: #FFF0EF; color: #FF3B30; font-size: 14px; font-weight: 600; border: none; cursor: pointer; margin-top: 8px; }
-
-/* PARAMS */
-.plist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
-.pitem { display: flex; align-items: center; gap: 9px; padding: 11px 13px; background: #fff; border-radius: 11px; box-shadow: 0 2px 8px rgba(10,132,255,0.06); }
-.pitem.dragging { opacity: 0.4; }
-.pitem.dragover { outline: 2px solid #0A84FF; }
-.draghdl { display: flex; flex-direction: column; gap: 3px; padding-right: 3px; cursor: grab; opacity: 0.3; }
-.draghdl span { display: block; width: 15px; height: 2px; background: #0D1117; border-radius: 2px; }
-.plabel { flex: 1; font-size: 14px; font-weight: 500; }
-.pkm { font-size: 13px; font-weight: 700; color: #0A84FF; min-width: 50px; text-align: right; }
-.pedit { background: none; border: none; cursor: pointer; color: #9CA3AF; font-size: 17px; padding: 0 0 0 6px; }
-.psep { height: 1px; background: #E5E9F0; margin: 14px 0; }
-.phint { font-size: 11px; color: #9CA3AF; margin-bottom: 9px; }
-
-/* MODAL */
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end; justify-content: center; }
-.overlay.open { display: flex; }
-.modal { background: #F2F4F8; border-radius: 22px 22px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom,0px) + 28px); width: 100%; max-width: 430px; }
-.modal-hdl { width: 36px; height: 4px; background: #E5E9F0; border-radius: 2px; margin: 0 auto 16px; }
-.modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; }
-.modal-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-.modal-btns button { width: 100%; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; }
-.mbsave { background: #0A84FF; color: #fff; }
-.mbdel { background: #FFF0EF; color: #FF3B30; }
-.mbcancel { background: #E5E9F0; color: #6B7280; }
-
-/* INFO PANEL */
-.info-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; align-items: flex-end; justify-content: center; }
-.info-overlay.open { display: flex; }
-.info-panel { background: #F2F4F8; border-radius: 22px 22px 0 0; padding: 20px 20px calc(env(safe-area-inset-bottom,0px) + 28px); width: 100%; max-width: 430px; max-height: 80vh; overflow-y: auto; }
-.info-hdl { width: 36px; height: 4px; background: #E5E9F0; border-radius: 2px; margin: 0 auto 16px; }
-.info-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.info-hdr h2 { font-size: 19px; font-weight: 700; }
-.info-close { background: #E5E9F0; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 15px; cursor: pointer; }
-.info-v { display: inline-block; background: #E8F3FF; color: #0A84FF; font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
-.info-sec { background: #fff; border-radius: 13px; padding: 14px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(10,132,255,0.06); }
-.info-sec h3 { font-size: 12px; font-weight: 700; color: #0A84FF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-.info-sec p, .info-sec li { font-size: 14px; color: #6B7280; line-height: 1.6; }
-.info-sec ul { padding-left: 16px; }
-.info-sec li { margin-bottom: 3px; }
-.info-foot { font-size: 12px; color: #9CA3AF; text-align: center; margin-top: 14px; }
-
-/* TOAST */
-.toast { position: fixed; bottom: calc(env(safe-area-inset-bottom,0px) + 20px); left: 50%; transform: translateX(-50%); background: rgba(13,17,23,0.88); color: #fff; border-radius: 24px; padding: 11px 22px; font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.3s; z-index: 999; white-space: nowrap; pointer-events: none; }
-.toast.show { opacity: 1; }
-.toast.ok { background: rgba(52,199,89,0.95); }
-.toast.err { background: rgba(255,59,48,0.95); }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F2F4F8;color:#0D1117}
+.full{position:fixed;inset:0;z-index:100;background:linear-gradient(160deg,#0A84FF,#0051CC);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px}
+.full.hide{display:none}
+.ft{font-size:26px;font-weight:700;color:#fff;margin-bottom:6px;text-align:center}
+.fs{font-size:14px;color:rgba(255,255,255,0.75);margin-bottom:32px;text-align:center}
+.fc{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px}
+.fc label{font-size:12px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;margin-top:14px}
+.fc label:first-child{margin-top:0}
+.fc input{width:100%;font-size:16px;border:1.5px solid #E5E9F0;border-radius:10px;padding:11px 13px;color:#0D1117;outline:none}
+.fc input:focus{border-color:#0A84FF}
+.fbtn{display:block;width:100%;margin-top:18px;padding:15px;border-radius:10px;background:#0A84FF;color:#fff;font-size:16px;font-weight:600;border:none;cursor:pointer}
+.flink{display:block;width:100%;margin-top:10px;padding:11px;background:none;border:none;color:#6B7280;font-size:14px;cursor:pointer;text-align:center}
+.ferr{color:#FF3B30;font-size:13px;margin-top:8px;display:none}
+.app{height:100vh;display:flex;flex-direction:column;max-width:430px;margin:0 auto}
+.app.hide{display:none}
+.hdr{background:#fff;border-bottom:.5px solid #E5E9F0;flex-shrink:0;padding:env(safe-area-inset-top,0px) 0 0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+.hdr-title{font-size:18px;font-weight:700}
+.hdr-actions{display:flex;align-items:center;gap:8px}
+.hbtn{background:#E8F3FF;border:none;border-radius:10px;padding:8px 12px;font-size:14px;font-weight:500;color:#0A84FF;cursor:pointer;min-height:38px;display:flex;align-items:center;justify-content:center}
+.hbtn:active{background:#C5DFFF}
+.tabs{display:flex;border-top:.5px solid #E5E9F0}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:12px;font-weight:500;color:#9CA3AF;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:#0A84FF;border-bottom-color:#0A84FF;font-weight:600}
+.cnt{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 40px}
+.scr{display:none}
+.scr.active{display:block}
+.mcard{background:linear-gradient(135deg,#0A84FF,#0051CC);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(10,132,255,.25)}
+.mnav{display:flex;align-items:center;gap:8px}
+.mnbtn{background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mnbtn:active{background:rgba(255,255,255,.4)}
+.mname{font-size:15px;font-weight:700;color:#fff;min-width:110px;text-align:center}
+.dside{text-align:right}
+.dlbl{font-size:11px;color:rgba(255,255,255,.7)}
+.dinp{font-size:14px;border:none;background:transparent;color:#fff;font-weight:600;outline:none}
+.dinp::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.8;width:14px}
+.slbl{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.tbtn{padding:13px 11px;border-radius:13px;border:none;background:#fff;cursor:pointer;text-align:left;box-shadow:0 2px 8px rgba(10,132,255,.08);position:relative;overflow:hidden}
+.tbtn::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#0A84FF}
+.tbtn:active{background:#E8F3FF}
+.tbtn .tr{font-size:12px;font-weight:600;color:#0D1117;line-height:1.4}
+.tbtn .tk{font-size:11px;color:#0A84FF;font-weight:500;margin-top:4px}
+.tbtn.autre{border:1.5px dashed #C5DFFF;box-shadow:none;background:#F9FAFB}
+.tbtn.autre::before{display:none}
+.tbtn.autre .tr{color:#6B7280}
+.tbtn.autre .tk{color:#9CA3AF}
+.aform{display:none;background:#fff;border-radius:13px;padding:14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(10,132,255,.08);border-left:3px solid #0A84FF}
+.aform.vis{display:block}
+.flbl{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px}
+.finp{width:100%;font-size:16px;border:1.5px solid #E5E9F0;border-radius:9px;padding:9px 11px;color:#0D1117;outline:none;background:#F9FAFB;margin-bottom:10px}
+.finp:focus{border-color:#0A84FF;background:#fff}
+.frow{display:flex;gap:8px;align-items:center}
+.fadd{padding:9px 16px;border-radius:9px;background:#0A84FF;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.scard{background:#fff;border-radius:11px;padding:11px 10px;box-shadow:0 2px 8px rgba(10,132,255,.08);text-align:center}
+.scard .sl{font-size:10px;color:#9CA3AF;font-weight:500;margin-bottom:3px}
+.scard .sv{font-size:20px;font-weight:700;color:#0D1117}
+.scard.bl .sv{color:#0A84FF}
+.scard.gr .sv{color:#34C759;font-size:16px}
+.remb{background:linear-gradient(135deg,#34C759,#28a745);border-radius:13px;padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 14px rgba(52,199,89,.25)}
+.rl{font-size:13px;color:rgba(255,255,255,.85);font-weight:500}
+.rd{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px}
+.ramt{font-size:24px;font-weight:700;color:#fff}
+.elist{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.eitem{display:flex;align-items:center;padding:10px 13px;background:#fff;border-radius:11px;box-shadow:0 2px 8px rgba(10,132,255,.06);border-left:3px solid #C5DFFF}
+.edate{font-size:11px;color:#9CA3AF;font-weight:500}
+.eroute{font-size:13px;font-weight:600;color:#0D1117;margin-top:1px}
+.ekm{font-size:14px;font-weight:700;color:#0A84FF;white-space:nowrap;margin-left:10px}
+.edel{background:none;border:none;cursor:pointer;color:#FF3B30;font-size:20px;padding:0 0 0 8px;opacity:.7}
+.edel:active{opacity:1}
+.empty{text-align:center;padding:36px 16px;color:#9CA3AF;font-size:14px}
+.ei{font-size:36px;margin-bottom:8px}
+.acard{background:#fff;border-radius:13px;padding:15px;box-shadow:0 2px 8px rgba(10,132,255,.08);margin-bottom:10px}
+.aclbl{font-size:11px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:8px}
+.bblue{display:block;width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,#0A84FF,#0051CC);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(10,132,255,.3);margin-bottom:8px}
+.bblue:active{opacity:.85}
+.bblue:disabled{background:#E5E9F0;box-shadow:none;color:#9CA3AF}
+.bgreen{display:block;width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,#34C759,#28a745);color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(52,199,89,.3)}
+.bgreen:active{opacity:.85}
+.bsec{display:block;width:100%;padding:11px;border-radius:10px;background:#E8F3FF;color:#0A84FF;font-size:14px;font-weight:600;border:none;cursor:pointer;margin-top:8px}
+.bred{display:block;width:100%;padding:13px;border-radius:10px;background:#FFF0EF;color:#FF3B30;font-size:14px;font-weight:600;border:none;cursor:pointer;margin-top:8px}
+.plist{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.pitem{display:flex;align-items:center;gap:9px;padding:11px 13px;background:#fff;border-radius:11px;box-shadow:0 2px 8px rgba(10,132,255,.06)}
+.pitem.dragging{opacity:.4}
+.pitem.dragover{outline:2px solid #0A84FF}
+.dhdl{display:flex;flex-direction:column;gap:3px;padding-right:3px;cursor:grab;opacity:.3}
+.dhdl span{display:block;width:15px;height:2px;background:#0D1117;border-radius:2px}
+.plbl{flex:1;font-size:14px;font-weight:500}
+.pkm{font-size:13px;font-weight:700;color:#0A84FF;min-width:50px;text-align:right}
+.pedit{background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:17px;padding:0 0 0 6px}
+.psep{height:1px;background:#E5E9F0;margin:14px 0}
+.phint{font-size:11px;color:#9CA3AF;margin-bottom:9px}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center}
+.ovl.open{display:flex}
+.modal{background:#F2F4F8;border-radius:22px 22px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 28px);width:100%;max-width:430px}
+.mhdl{width:36px;height:4px;background:#E5E9F0;border-radius:2px;margin:0 auto 16px}
+.modal h3{font-size:17px;font-weight:700;margin-bottom:16px}
+.mbtns{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.mbtns button{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:600;border:none;cursor:pointer}
+.mbsave{background:#0A84FF;color:#fff}
+.mbdel{background:#FFF0EF;color:#FF3B30}
+.mbcancel{background:#E5E9F0;color:#6B7280}
+.iovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center}
+.iovl.open{display:flex}
+.ipanel{background:#F2F4F8;border-radius:22px 22px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom,0px) + 28px);width:100%;max-width:430px;max-height:80vh;overflow-y:auto}
+.ihdl{width:36px;height:4px;background:#E5E9F0;border-radius:2px;margin:0 auto 16px}
+.ihdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ihdr h2{font-size:19px;font-weight:700}
+.iclose{background:#E5E9F0;border:none;width:30px;height:30px;border-radius:50%;font-size:15px;cursor:pointer}
+.iv{display:inline-block;background:#E8F3FF;color:#0A84FF;font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;margin-bottom:16px}
+.isec{background:#fff;border-radius:13px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(10,132,255,.06)}
+.isec h3{font-size:12px;font-weight:700;color:#0A84FF;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.isec p,.isec li{font-size:14px;color:#6B7280;line-height:1.6}
+.isec ul{padding-left:16px}
+.isec li{margin-bottom:3px}
+.ifoot{font-size:12px;color:#9CA3AF;text-align:center;margin-top:14px}
+.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);background:rgba(13,17,23,.88);color:#fff;border-radius:24px;padding:11px 22px;font-size:14px;font-weight:500;opacity:0;transition:opacity .3s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+.toast.ok{background:rgba(52,199,89,.95)}
+.toast.err{background:rgba(255,59,48,.95)}
 </style>
 </head>
 <body>
 
-<!-- ÉCRAN INSCRIPTION -->
-<div class="fullscreen" id="screen-signup">
-  <div class="fs-title">Trajets professionnels</div>
-  <div class="fs-sub">Suivi kilométrique — ASBL Electrons Libres</div>
-  <div class="fs-card">
-    <label>Ton prénom</label>
+<div class="full" id="sc-signup">
+  <div class="ft">Trajets professionnels</div>
+  <div class="fs">Suivi kilometrique — ASBL Electrons Libres</div>
+  <div class="fc">
+    <label>Ton prenom</label>
     <input type="text" id="su-name" placeholder="Ex : Vincent" autocomplete="given-name">
     <label>Adresse e-mail</label>
     <input type="email" id="su-email" placeholder="ton@email.com" autocomplete="email">
     <label>Mot de passe</label>
-    <input type="password" id="su-pwd" placeholder="Minimum 4 caractères">
+    <input type="password" id="su-pwd" placeholder="Minimum 4 caracteres">
     <label>Confirme le mot de passe</label>
-    <input type="password" id="su-pwd2" placeholder="Répète le mot de passe">
-    <div class="fs-error" id="su-error"></div>
-    <button class="fs-btn" id="su-btn">Créer mon compte →</button>
-    <button class="fs-link" id="su-login-link">J'ai déjà un compte</button>
+    <input type="password" id="su-pwd2" placeholder="Repete le mot de passe">
+    <div class="ferr" id="su-err"></div>
+    <button class="fbtn" id="su-btn">Creer mon compte</button>
+    <button class="flink" id="su-link">J ai deja un compte</button>
   </div>
 </div>
 
-<!-- ÉCRAN CONNEXION -->
-<div class="fullscreen hidden" id="screen-login">
-  <div class="fs-title" id="login-title">Bon retour !</div>
-  <div class="fs-sub">Entre ton mot de passe pour continuer</div>
-  <div class="fs-card">
-    <label>Prénom</label>
-    <input type="text" id="li-name" placeholder="Ton prénom">
+<div class="full hide" id="sc-login">
+  <div class="ft">Bon retour !</div>
+  <div class="fs">Entre ton mot de passe pour continuer</div>
+  <div class="fc">
+    <label>Prenom</label>
+    <input type="text" id="li-name" placeholder="Ton prenom">
     <label>Mot de passe</label>
     <input type="password" id="li-pwd" placeholder="Ton mot de passe">
-    <div class="fs-error" id="li-error"></div>
-    <button class="fs-btn" id="li-btn">Se connecter →</button>
-    <button class="fs-link" id="li-forgot">Mot de passe oublié ?</button>
-    <button class="fs-link" id="li-new">Créer un nouveau compte</button>
+    <div class="ferr" id="li-err"></div>
+    <button class="fbtn" id="li-btn">Se connecter</button>
+    <button class="flink" id="li-forgot">Mot de passe oublie ?</button>
+    <button class="flink" id="li-new">Creer un nouveau compte</button>
   </div>
 </div>
 
-<!-- ÉCRAN RÉCUPÉRATION MDP -->
-<div class="fullscreen hidden" id="screen-reset">
-  <div class="fs-title">Récupération</div>
-  <div class="fs-sub">Un code sera envoyé à ton adresse e-mail</div>
-  <div class="fs-card">
-    <label>Ton prénom</label>
+<div class="full hide" id="sc-reset">
+  <div class="ft">Recuperation</div>
+  <div class="fs">Un code sera envoye a ton adresse e-mail</div>
+  <div class="fc">
+    <label>Ton prenom</label>
     <input type="text" id="re-name" placeholder="Ex : Vincent">
-    <label>Adresse e-mail enregistrée</label>
+    <label>Adresse e-mail enregistree</label>
     <input type="email" id="re-email" placeholder="ton@email.com">
-    <div class="fs-error" id="re-error"></div>
-    <button class="fs-btn" id="re-btn">Envoyer le code →</button>
-    <div class="fullscreen hidden" id="re-code-section" style="position:static;background:none;padding:0;display:none;">
-      <label style="margin-top:14px;">Code reçu par e-mail</label>
-      <input type="text" id="re-code" placeholder="Code à 6 chiffres">
+    <div class="ferr" id="re-err"></div>
+    <button class="fbtn" id="re-send">Envoyer le code</button>
+    <div id="re-code-block" style="display:none">
+      <label>Code recu par e-mail</label>
+      <input type="text" id="re-code" placeholder="Code a 6 chiffres">
       <label>Nouveau mot de passe</label>
       <input type="password" id="re-newpwd" placeholder="Nouveau mot de passe">
-      <button class="fs-btn" id="re-confirm-btn" style="margin-top:10px;">Réinitialiser →</button>
+      <button class="fbtn" id="re-confirm" style="margin-top:10px">Reinitialiser</button>
     </div>
-    <button class="fs-link" id="re-back">← Retour</button>
+    <button class="flink" id="re-back">Retour</button>
   </div>
 </div>
 
-<!-- APP -->
-<div class="app hidden" id="app">
-  <div class="header">
-    <div class="header-top">
-      <div class="header-title">Trajets professionnels</div>
-      <div class="header-actions">
-        <button class="hbtn" id="btn-info">ℹ</button>
-        <button class="hbtn" id="btn-user">👤 <span id="user-label"></span></button>
+<div class="app hide" id="app">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-title">Trajets professionnels</div>
+      <div class="hdr-actions">
+        <button class="hbtn" id="btn-info">i</button>
+        <button class="hbtn" id="btn-user"><span id="ulbl"></span></button>
       </div>
     </div>
     <div class="tabs">
-      <button class="tab active" data-screen="encoder">+ Trajet</button>
-      <button class="tab" data-screen="historique">Historique</button>
-      <button class="tab" data-screen="parametres">Paramètres</button>
+      <button class="tab active" data-sc="encoder">+ Trajet</button>
+      <button class="tab" data-sc="historique">Historique</button>
+      <button class="tab" data-sc="parametres">Parametres</button>
     </div>
   </div>
-
-  <div class="content">
-
-    <!-- ENCODER -->
-    <div class="screen active" id="sc-encoder">
-      <div class="month-card">
-        <div class="month-nav">
-          <button class="mnbtn" id="prev-month">‹</button>
-          <div class="month-name" id="month-label"></div>
-          <button class="mnbtn" id="next-month">›</button>
+  <div class="cnt">
+    <div class="scr active" id="sc-encoder">
+      <div class="mcard">
+        <div class="mnav">
+          <button class="mnbtn" id="prev-m">&#8249;</button>
+          <div class="mname" id="mlbl"></div>
+          <button class="mnbtn" id="next-m">&#8250;</button>
         </div>
-        <div class="date-side">
-          <div class="date-lbl">Date du trajet</div>
-          <input type="date" id="date-inp" class="date-inp">
+        <div class="dside">
+          <div class="dlbl">Date du trajet</div>
+          <input type="date" id="dinp" class="dinp">
         </div>
       </div>
-      <div class="slabel">Sélectionne un trajet</div>
+      <div class="slbl">Selectionne un trajet</div>
       <div class="tgrid" id="tgrid"></div>
-      <div class="autre-form" id="autre-form">
-        <label class="flabel">Description</label>
-        <input type="text" id="a-desc" class="finput" placeholder="Ex : Réunion à Liège">
-        <label class="flabel">Kilomètres</label>
+      <div class="aform" id="aform">
+        <label class="flbl">Description</label>
+        <input type="text" id="a-desc" class="finp" placeholder="Ex : Reunion a Liege">
+        <label class="flbl">Kilometres</label>
         <div class="frow">
-          <input type="number" id="a-km" class="finput" placeholder="km" min="0" style="flex:1;margin-bottom:0;">
+          <input type="number" id="a-km" class="finp" placeholder="km" min="0" style="flex:1;margin-bottom:0">
           <button class="fadd" id="a-confirm">Confirmer</button>
         </div>
       </div>
     </div>
-
-    <!-- HISTORIQUE -->
-    <div class="screen" id="sc-historique">
+    <div class="scr" id="sc-historique">
       <div class="stats">
-        <div class="scard"><div class="sl">Trajets</div><div class="sv" id="s-count">0</div></div>
-        <div class="scard blue"><div class="sl">Km mois</div><div class="sv" id="s-km">0</div></div>
-        <div class="scard green"><div class="sl">Remboursement</div><div class="sv" id="s-remb">0 €</div></div>
+        <div class="scard"><div class="sl">Trajets</div><div class="sv" id="s-cnt">0</div></div>
+        <div class="scard bl"><div class="sl">Km mois</div><div class="sv" id="s-km">0</div></div>
+        <div class="scard gr"><div class="sl">Remboursement</div><div class="sv" id="s-remb">0 E</div></div>
       </div>
       <div class="remb">
-        <div class="remb-left">
-          <div class="rl">Remboursement estimé</div>
-          <div class="rd" id="remb-detail"></div>
-        </div>
-        <div class="remb-amt" id="remb-amt">0,00 €</div>
+        <div><div class="rl">Remboursement estime</div><div class="rd" id="r-detail"></div></div>
+        <div class="ramt" id="r-amt">0,00 E</div>
       </div>
-      <div class="slabel" id="hist-title"></div>
+      <div class="slbl" id="hist-lbl"></div>
       <div class="elist" id="elist"></div>
       <div class="acard">
-        <span class="acard-lbl">Envoyer le relevé</span>
-        <input type="email" id="mail-to" class="finput">
-        <button class="btn-blue" id="send-btn">📧 Envoyer par e-mail</button>
-        <button class="btn-green" id="xls-btn">📊 Générer le fichier XLS</button>
+        <span class="aclbl">Envoyer le releve</span>
+        <input type="email" id="mail-to" class="finp">
+        <button class="bblue" id="send-btn">Envoyer par e-mail</button>
+        <button class="bgreen" id="xls-btn">Generer le fichier XLS</button>
       </div>
     </div>
-
-    <!-- PARAMÈTRES -->
-    <div class="screen" id="sc-parametres">
-      <div class="slabel">Trajets enregistrés</div>
-      <div class="phint">Glisse ≡ pour réordonner · ✎ pour modifier</div>
+    <div class="scr" id="sc-parametres">
+      <div class="slbl">Trajets enregistres</div>
+      <div class="phint">Glisse pour reordonner · crayon pour modifier</div>
       <div class="plist" id="plist"></div>
       <div class="acard">
-        <span class="acard-lbl">Ajouter un trajet</span>
-        <label class="flabel">Libellé</label>
-        <input type="text" id="p-label" class="finput" placeholder="Ex : Domicile → Nandrin">
-        <label class="flabel">Kilomètres</label>
+        <span class="aclbl">Ajouter un trajet</span>
+        <label class="flbl">Libelle</label>
+        <input type="text" id="p-lbl" class="finp" placeholder="Ex : Domicile vers Nandrin">
+        <label class="flbl">Kilometres</label>
         <div class="frow">
-          <input type="number" id="p-km" class="finput" placeholder="km" min="0" style="flex:1;margin-bottom:0;">
+          <input type="number" id="p-km" class="finp" placeholder="km" min="0" style="flex:1;margin-bottom:0">
           <button class="fadd" id="p-add">Ajouter</button>
         </div>
       </div>
       <div class="psep"></div>
       <div class="acard">
-        <span class="acard-lbl">Index kilométrique (€/km)</span>
-        <input type="number" id="p-index" class="finput" step="0.0001" min="0">
-        <button class="btn-sec" id="p-save-index">Enregistrer l'index</button>
+        <span class="aclbl">Index kilometrique (euro/km)</span>
+        <input type="number" id="p-idx" class="finp" step="0.0001" min="0">
+        <button class="bsec" id="p-save-idx">Enregistrer l index</button>
       </div>
       <div class="acard">
-        <span class="acard-lbl">Mon adresse e-mail</span>
-        <input type="email" id="p-email" class="finput">
-        <button class="btn-sec" id="p-save-email">Enregistrer l'adresse</button>
+        <span class="aclbl">Mon adresse e-mail</span>
+        <input type="email" id="p-email" class="finp">
+        <button class="bsec" id="p-save-email">Enregistrer l adresse</button>
       </div>
       <div class="acard">
-        <span class="acard-lbl">Mon mot de passe</span>
-        <input type="password" id="p-oldpwd" class="finput" placeholder="Mot de passe actuel">
-        <input type="password" id="p-newpwd" class="finput" placeholder="Nouveau mot de passe">
-        <button class="btn-sec" id="p-save-pwd">Changer le mot de passe</button>
+        <span class="aclbl">Changer mon mot de passe</span>
+        <input type="password" id="p-oldpwd" class="finp" placeholder="Mot de passe actuel">
+        <input type="password" id="p-newpwd" class="finp" placeholder="Nouveau mot de passe">
+        <button class="bsec" id="p-save-pwd">Changer le mot de passe</button>
       </div>
-      <button class="btn-red" id="p-logout">Changer d'utilisateur</button>
+      <button class="bred" id="p-logout">Changer d utilisateur</button>
     </div>
-
   </div>
 </div>
 
-<!-- MODAL EDIT TRAJET -->
-<div class="overlay" id="modal">
+<div class="ovl" id="modal">
   <div class="modal">
-    <div class="modal-hdl"></div>
+    <div class="mhdl"></div>
     <h3>Modifier le trajet</h3>
-    <label class="flabel">Libellé</label>
-    <input type="text" id="m-label" class="finput">
-    <label class="flabel">Kilomètres</label>
-    <input type="number" id="m-km" class="finput" min="0">
-    <div class="modal-btns">
+    <label class="flbl">Libelle</label>
+    <input type="text" id="m-lbl" class="finp">
+    <label class="flbl">Kilometres</label>
+    <input type="number" id="m-km" class="finp" min="0">
+    <div class="mbtns">
       <button class="mbsave" id="m-save">Enregistrer</button>
       <button class="mbdel" id="m-del">Supprimer ce trajet</button>
       <button class="mbcancel" id="m-cancel">Annuler</button>
@@ -378,571 +303,438 @@ body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #
   </div>
 </div>
 
-<!-- PANEL INFO -->
-<div class="info-overlay" id="info-overlay">
-  <div class="info-panel">
-    <div class="info-hdl"></div>
-    <div class="info-hdr">
-      <h2>À propos</h2>
-      <button class="info-close" id="info-close">✕</button>
-    </div>
-    <span class="info-v">v1.0.0 — 08/04/2026</span>
-    <div class="info-sec">
-      <h3>📋 Description</h3>
-      <p>Application de suivi kilométrique professionnel pour les membres de l'ASBL Electrons Libres et le personnel de la Commune de Nandrin. Permet d'encoder rapidement ses trajets et de générer les notes de remboursement mensuelles.</p>
-    </div>
-    <div class="info-sec">
-      <h3>📖 Mode d'emploi</h3>
-      <ul>
-        <li><strong>+ Trajet</strong> : touche un bouton pour enregistrer un trajet. Navigue avec ‹ › pour changer de mois.</li>
-        <li><strong>Historique</strong> : consulte tes trajets, le total km et le remboursement. Génère le XLS ou envoie par e-mail.</li>
-        <li><strong>Paramètres</strong> : gère tes trajets, l'index kilométrique et ton compte.</li>
-      </ul>
-    </div>
-    <div class="info-sec">
-      <h3>🔒 Confidentialité</h3>
-      <p>Toutes tes données sont stockées uniquement sur ton appareil. Aucune donnée n'est envoyée à un serveur tiers, sauf les e-mails via EmailJS.</p>
-    </div>
-    <div class="info-sec">
-      <h3>👤 Auteur</h3>
-      <p>Développé par <strong>Vincent</strong> — ASBL Electrons Libres<br>
-      Contact : <a href="mailto:vincent.dessart@electronslibres.info" style="color:#0A84FF;">vincent.dessart@electronslibres.info</a></p>
-    </div>
-    <div class="info-foot">Trajets professionnels v1.0.0 · ASBL Electrons Libres · 2026</div>
+<div class="iovl" id="iov">
+  <div class="ipanel">
+    <div class="ihdl"></div>
+    <div class="ihdr"><h2>A propos</h2><button class="iclose" id="iclose">X</button></div>
+    <span class="iv">v1.0.0 - 08/04/2026</span>
+    <div class="isec"><h3>Description</h3><p>Application de suivi kilometrique professionnel pour les membres de l ASBL Electrons Libres et le personnel de la Commune de Nandrin.</p></div>
+    <div class="isec"><h3>Mode d emploi</h3><ul><li>+ Trajet : touche un bouton pour enregistrer. Utilise les fleches pour changer de mois.</li><li>Historique : consulte tes trajets et genere le releve XLS ou envoie par e-mail.</li><li>Parametres : gere tes trajets, l index et ton compte.</li></ul></div>
+    <div class="isec"><h3>Confidentialite</h3><p>Toutes tes donnees sont stockees uniquement sur ton appareil. Aucune donnee n est envoyee a un serveur tiers, sauf les e-mails via EmailJS.</p></div>
+    <div class="isec"><h3>Auteur</h3><p>Developpe par Vincent — ASBL Electrons Libres<br>Contact : vincent.dessart@electronslibres.info</p></div>
+    <div class="ifoot">Trajets professionnels v1.0.0 · ASBL Electrons Libres · 2026</div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-// ============================================================
-// CONSTANTES
-// ============================================================
-const EMAILJS_SERVICE  = 'service_rhzyr4l';
-const EMAILJS_TEMPLATE = 'template_74evcpi';
-const EMAILJS_KEY      = 'snAgrIZiO5bEOOF56';
-
-const DEFAULT_TRAJETS = [
-  { label: 'Villers → St-Séverin', km: 8 },
-  { label: 'St-Séverin → Villers', km: 8 },
-  { label: 'Villers → Botty',      km: 5 },
-  { label: 'St-Séverin → Botty',   km: 6 },
-  { label: 'Botty → Villers',      km: 5 },
-  { label: 'Botty → St-Séverin',   km: 6 },
-  { label: 'Domicile → Botty',     km: 12 },
-  { label: 'Domicile → St-Séverin',km: 15 },
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+var EJS = 'service_rhzyr4l';
+var EJT = 'template_74evcpi';
+var EJK = 'snAgrIZiO5bEOOF56';
+var DEFTRAJETS = [
+  {label:'Villers -> St-Severin',km:8},
+  {label:'St-Severin -> Villers',km:8},
+  {label:'Villers -> Botty',km:5},
+  {label:'St-Severin -> Botty',km:6},
+  {label:'Botty -> Villers',km:5},
+  {label:'Botty -> St-Severin',km:6},
+  {label:'Domicile -> Botty',km:12},
+  {label:'Domicile -> St-Severin',km:15}
 ];
+var MOIS = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+var uid = null, trajets = [], entries = [], kmIdx = 0.4327, mailTo = '';
+var vy = new Date().getFullYear(), vm = new Date().getMonth();
+var editIdx = -1, dragSrc = -1, resetCode = null;
 
-const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const MONTHS_S = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+function ukey(k){return 'km2_'+uid+'_'+k;}
+function hsh(s){var h=0;for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return String(h);}
+function pad(n){return String(n).padStart(2,'0');}
+function toToday(){return new Date().toISOString().split('T')[0];}
+function fmtD(s){var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function ymStr(){return vy+'-'+pad(vm+1);}
 
-// ============================================================
-// STATE
-// ============================================================
-let currentUser = null;
-let trajets = [], entries = [];
-let kmIndex = 0.4327;
-let mailTo = '';
-let viewYear = new Date().getFullYear();
-let viewMonth = new Date().getMonth();
-let editIdx = -1;
-let dragSrc = -1;
-let resetCode = null;
-
-// ============================================================
-// UTILITAIRES
-// ============================================================
-function ukey(k) { return 'km_' + currentUser + '_' + k; }
-function hash(s) { let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return String(h); }
-function today() { return new Date().toISOString().split('T')[0]; }
-function pad(n) { return String(n).padStart(2,'0'); }
-function fmtDate(s) { const [y,m,d]=s.split('-'); return d+'/'+m+'/'+y; }
-function ymStr() { return viewYear+'-'+pad(viewMonth+1); }
-
-function toast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast' + (type ? ' '+type : '');
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast'+(type?' '+type:'');
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  setTimeout(function(){t.classList.remove('show');},3000);
 }
 
-function saveData() {
-  localStorage.setItem(ukey('trajets'), JSON.stringify(trajets));
-  localStorage.setItem(ukey('entries'), JSON.stringify(entries));
-}
-
-// ============================================================
-// NAVIGATION ÉCRANS
-// ============================================================
-function showOnly(id) {
-  ['screen-signup','screen-login','screen-reset'].forEach(sid => {
-    const el = document.getElementById(sid);
-    if (sid === id) { el.classList.remove('hidden'); }
-    else { el.classList.add('hidden'); }
+function showOnly(id){
+  var ids=['sc-signup','sc-login','sc-reset','app'];
+  ids.forEach(function(sid){
+    var el=document.getElementById(sid);
+    if(sid===id){el.classList.remove('hide');}
+    else{el.classList.add('hide');}
   });
-  const app = document.getElementById('app');
-  if (id === 'app') { app.classList.remove('hidden'); }
-  else { app.classList.add('hidden'); }
 }
 
-// ============================================================
+function saveData(){
+  localStorage.setItem(ukey('trajets'),JSON.stringify(trajets));
+  localStorage.setItem(ukey('entries'),JSON.stringify(entries));
+}
+
 // INSCRIPTION
-// ============================================================
-document.getElementById('su-btn').addEventListener('click', function() {
-  const name  = document.getElementById('su-name').value.trim();
-  const email = document.getElementById('su-email').value.trim();
-  const pwd   = document.getElementById('su-pwd').value;
-  const pwd2  = document.getElementById('su-pwd2').value;
-  const err   = document.getElementById('su-error');
-  err.style.display = 'none';
-  if (!name)            { err.textContent='Entre ton prénom'; err.style.display='block'; return; }
-  if (!email)           { err.textContent='Entre ton adresse e-mail'; err.style.display='block'; return; }
-  if (pwd.length < 4)   { err.textContent='Mot de passe trop court (min. 4 caractères)'; err.style.display='block'; return; }
-  if (pwd !== pwd2)     { err.textContent='Les mots de passe ne correspondent pas'; err.style.display='block'; return; }
-  const uid = name.toLowerCase().replace(/\s+/g,'_');
-  localStorage.setItem('km_user_'+uid+'_name', name);
-  localStorage.setItem('km_user_'+uid+'_email', email);
-  localStorage.setItem('km_user_'+uid+'_pwd', hash(pwd));
-  localStorage.setItem('km_last_uid', uid);
-  startApp(uid);
-});
+document.getElementById('su-btn').onclick = function(){
+  var name=document.getElementById('su-name').value.trim();
+  var email=document.getElementById('su-email').value.trim();
+  var pwd=document.getElementById('su-pwd').value;
+  var pwd2=document.getElementById('su-pwd2').value;
+  var err=document.getElementById('su-err');
+  err.style.display='none';
+  if(!name){err.textContent='Entre ton prenom';err.style.display='block';return;}
+  if(!email){err.textContent='Entre ton adresse e-mail';err.style.display='block';return;}
+  if(pwd.length<4){err.textContent='Mot de passe trop court (min. 4 caracteres)';err.style.display='block';return;}
+  if(pwd!==pwd2){err.textContent='Les mots de passe ne correspondent pas';err.style.display='block';return;}
+  var id=name.toLowerCase().replace(/\s+/g,'_');
+  localStorage.setItem('km2_u_'+id+'_name',name);
+  localStorage.setItem('km2_u_'+id+'_email',email);
+  localStorage.setItem('km2_u_'+id+'_pwd',hsh(pwd));
+  localStorage.setItem('km2_last',id);
+  startApp(id);
+};
+document.getElementById('su-link').onclick = function(){showOnly('sc-login');};
 
-document.getElementById('su-login-link').addEventListener('click', function() {
-  showOnly('screen-login');
-});
-
-// ============================================================
 // CONNEXION
-// ============================================================
-document.getElementById('li-btn').addEventListener('click', doLogin);
-document.getElementById('li-pwd').addEventListener('keydown', function(e) { if(e.key==='Enter') doLogin(); });
-
-function doLogin() {
-  const name = document.getElementById('li-name').value.trim();
-  const pwd  = document.getElementById('li-pwd').value;
-  const err  = document.getElementById('li-error');
-  err.style.display = 'none';
-  if (!name) { err.textContent='Entre ton prénom'; err.style.display='block'; return; }
-  const uid = name.toLowerCase().replace(/\s+/g,'_');
-  const stored = localStorage.getItem('km_user_'+uid+'_pwd');
-  if (!stored) { err.textContent='Aucun compte trouvé pour ce prénom'; err.style.display='block'; return; }
-  if (hash(pwd) !== stored) { err.textContent='Mot de passe incorrect'; err.style.display='block'; document.getElementById('li-pwd').value=''; return; }
-  localStorage.setItem('km_last_uid', uid);
-  startApp(uid);
+document.getElementById('li-btn').onclick = doLogin;
+document.getElementById('li-pwd').onkeydown = function(e){if(e.key==='Enter')doLogin();};
+function doLogin(){
+  var name=document.getElementById('li-name').value.trim();
+  var pwd=document.getElementById('li-pwd').value;
+  var err=document.getElementById('li-err');
+  err.style.display='none';
+  if(!name){err.textContent='Entre ton prenom';err.style.display='block';return;}
+  var id=name.toLowerCase().replace(/\s+/g,'_');
+  var stored=localStorage.getItem('km2_u_'+id+'_pwd');
+  if(!stored){err.textContent='Aucun compte trouve pour ce prenom';err.style.display='block';return;}
+  if(hsh(pwd)!==stored){err.textContent='Mot de passe incorrect';err.style.display='block';document.getElementById('li-pwd').value='';return;}
+  localStorage.setItem('km2_last',id);
+  startApp(id);
 }
+document.getElementById('li-new').onclick = function(){showOnly('sc-signup');};
+document.getElementById('li-forgot').onclick = function(){
+  showOnly('sc-reset');
+  document.getElementById('re-code-block').style.display='none';
+  resetCode=null;
+};
 
-document.getElementById('li-new').addEventListener('click', function() {
-  showOnly('screen-signup');
-});
-
-// ============================================================
-// MOT DE PASSE OUBLIÉ
-// ============================================================
-document.getElementById('li-forgot').addEventListener('click', function() {
-  showOnly('screen-reset');
-  document.getElementById('re-code-section').style.display = 'none';
-  resetCode = null;
-});
-
-document.getElementById('re-back').addEventListener('click', function() {
-  showOnly('screen-login');
-});
-
-document.getElementById('re-btn').addEventListener('click', function() {
-  const name  = document.getElementById('re-name').value.trim();
-  const email = document.getElementById('re-email').value.trim();
-  const err   = document.getElementById('re-error');
-  err.style.display = 'none';
-  if (!name || !email) { err.textContent='Remplis tous les champs'; err.style.display='block'; return; }
-  const uid = name.toLowerCase().replace(/\s+/g,'_');
-  const storedEmail = localStorage.getItem('km_user_'+uid+'_email');
-  if (!storedEmail || storedEmail.toLowerCase() !== email.toLowerCase()) {
-    err.textContent='Prénom ou e-mail incorrect'; err.style.display='block'; return;
+// RECUPERATION MDP
+document.getElementById('re-send').onclick = function(){
+  var name=document.getElementById('re-name').value.trim();
+  var email=document.getElementById('re-email').value.trim();
+  var err=document.getElementById('re-err');
+  err.style.display='none';
+  if(!name||!email){err.textContent='Remplis tous les champs';err.style.display='block';return;}
+  var id=name.toLowerCase().replace(/\s+/g,'_');
+  var storedEmail=localStorage.getItem('km2_u_'+id+'_email');
+  if(!storedEmail||storedEmail.toLowerCase()!==email.toLowerCase()){
+    err.textContent='Prenom ou e-mail incorrect';err.style.display='block';return;
   }
-  resetCode = String(Math.floor(100000 + Math.random() * 900000));
-  emailjs.init(EMAILJS_KEY);
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-    to_email: email,
-    subject: 'Trajets Pro — Code de récupération',
-    message: 'Bonjour ' + name + ',\n\nTon code de récupération est : ' + resetCode + '\n\nCe code est valable pour cette session uniquement.\n\nASBL Electrons Libres'
-  }).then(function() {
-    toast('Code envoyé à ' + email, 'ok');
-    document.getElementById('re-code-section').style.display = 'block';
-    document.getElementById('re-btn').textContent = 'Renvoyer le code';
-  }).catch(function() {
-    err.textContent = 'Erreur d\'envoi. Vérifie ta connexion.'; err.style.display='block';
+  resetCode=String(Math.floor(100000+Math.random()*900000));
+  emailjs.init(EJK);
+  emailjs.send(EJS,EJT,{
+    to_email:email,
+    subject:'Trajets Pro - Code de recuperation',
+    message:'Bonjour '+name+',\n\nTon code de recuperation est : '+resetCode+'\n\nASBL Electrons Libres'
+  }).then(function(){
+    showToast('Code envoye a '+email,'ok');
+    document.getElementById('re-code-block').style.display='block';
+  }).catch(function(){
+    err.textContent='Erreur envoi. Verifie ta connexion.';err.style.display='block';
   });
-});
+};
+document.getElementById('re-confirm').onclick = function(){
+  var code=document.getElementById('re-code').value.trim();
+  var newpwd=document.getElementById('re-newpwd').value;
+  var name=document.getElementById('re-name').value.trim();
+  var err=document.getElementById('re-err');
+  err.style.display='none';
+  if(code!==resetCode){err.textContent='Code incorrect';err.style.display='block';return;}
+  if(newpwd.length<4){err.textContent='Mot de passe trop court';err.style.display='block';return;}
+  var id=name.toLowerCase().replace(/\s+/g,'_');
+  localStorage.setItem('km2_u_'+id+'_pwd',hsh(newpwd));
+  resetCode=null;
+  showToast('Mot de passe reinitialise !','ok');
+  showOnly('sc-login');
+  document.getElementById('li-name').value=name;
+};
+document.getElementById('re-back').onclick = function(){showOnly('sc-login');};
 
-document.getElementById('re-confirm-btn').addEventListener('click', function() {
-  const code   = document.getElementById('re-code').value.trim();
-  const newpwd = document.getElementById('re-newpwd').value;
-  const name   = document.getElementById('re-name').value.trim();
-  const err    = document.getElementById('re-error');
-  err.style.display = 'none';
-  if (code !== resetCode) { err.textContent='Code incorrect'; err.style.display='block'; return; }
-  if (newpwd.length < 4)  { err.textContent='Mot de passe trop court'; err.style.display='block'; return; }
-  const uid = name.toLowerCase().replace(/\s+/g,'_');
-  localStorage.setItem('km_user_'+uid+'_pwd', hash(newpwd));
-  resetCode = null;
-  toast('Mot de passe réinitialisé !', 'ok');
-  showOnly('screen-login');
-  document.getElementById('li-name').value = name;
-});
-
-// ============================================================
-// DÉMARRAGE APP
-// ============================================================
-function startApp(uid) {
-  currentUser = uid;
-  const name = localStorage.getItem('km_user_'+uid+'_name') || uid;
-  mailTo = localStorage.getItem('km_user_'+uid+'_email') || '';
-  kmIndex = parseFloat(localStorage.getItem(ukey('index')) || '0.4327');
-  trajets = JSON.parse(localStorage.getItem(ukey('trajets')) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TRAJETS));
-  entries = JSON.parse(localStorage.getItem(ukey('entries')) || '[]');
-  document.getElementById('user-label').textContent = name;
-  document.getElementById('mail-to').value = mailTo;
-  document.getElementById('p-email').value = mailTo;
-  document.getElementById('p-index').value = kmIndex;
+// DEMARRAGE APP
+function startApp(id){
+  uid=id;
+  var name=localStorage.getItem('km2_u_'+id+'_name')||id;
+  mailTo=localStorage.getItem('km2_u_'+id+'_email')||'';
+  kmIdx=parseFloat(localStorage.getItem(ukey('idx'))||'0.4327');
+  trajets=JSON.parse(localStorage.getItem(ukey('trajets'))||'null')||JSON.parse(JSON.stringify(DEFTRAJETS));
+  entries=JSON.parse(localStorage.getItem(ukey('entries'))||'[]');
+  document.getElementById('ulbl').textContent=name;
+  document.getElementById('mail-to').value=mailTo;
+  document.getElementById('p-email').value=mailTo;
+  document.getElementById('p-idx').value=kmIdx;
   showOnly('app');
-  updateMonthLabel();
+  updateMois();
   buildGrid();
   showScreen('encoder');
 }
 
-// ============================================================
 // AUTO LOGIN
-// ============================================================
-(function() {
-  const uid = localStorage.getItem('km_last_uid');
-  if (uid && localStorage.getItem('km_user_'+uid+'_pwd')) {
-    const name = localStorage.getItem('km_user_'+uid+'_name') || uid;
-    document.getElementById('li-name').value = name;
-    showOnly('screen-login');
+(function(){
+  var id=localStorage.getItem('km2_last');
+  if(id&&localStorage.getItem('km2_u_'+id+'_pwd')){
+    var name=localStorage.getItem('km2_u_'+id+'_name')||id;
+    document.getElementById('li-name').value=name;
+    showOnly('sc-login');
   } else {
-    showOnly('screen-signup');
+    showOnly('sc-signup');
   }
 })();
 
-// ============================================================
-// NAVIGATION TABS
-// ============================================================
-document.querySelectorAll('.tab').forEach(function(tab) {
-  tab.addEventListener('click', function() {
-    showScreen(this.dataset.screen);
-  });
+// TABS
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.onclick=function(){showScreen(this.dataset.sc);};
 });
-
-function showScreen(name) {
-  document.querySelectorAll('.tab').forEach(function(t) {
-    t.classList.toggle('active', t.dataset.screen === name);
-  });
-  document.querySelectorAll('.screen').forEach(function(s) {
-    s.classList.toggle('active', s.id === 'sc-'+name);
-  });
-  if (name === 'historique') renderHistory();
-  if (name === 'parametres') renderParams();
+function showScreen(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.sc===name);});
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.toggle('active',s.id==='sc-'+name);});
+  if(name==='historique')renderHistory();
+  if(name==='parametres')renderParams();
 }
 
-// ============================================================
-// NAVIGATION MOIS
-// ============================================================
-function updateMonthLabel() {
-  document.getElementById('month-label').textContent = MONTHS[viewMonth] + ' ' + viewYear;
-  const t = new Date(); 
-  if (viewYear === t.getFullYear() && viewMonth === t.getMonth()) {
-    document.getElementById('date-inp').value = today();
-  } else {
-    document.getElementById('date-inp').value = viewYear+'-'+pad(viewMonth+1)+'-01';
-  }
+// MOIS
+function updateMois(){
+  document.getElementById('mlbl').textContent=MOIS[vm]+' '+vy;
+  var t=new Date();
+  document.getElementById('dinp').value=(vy===t.getFullYear()&&vm===t.getMonth())?toToday():vy+'-'+pad(vm+1)+'-01';
 }
+document.getElementById('prev-m').onclick=function(){vm--;if(vm<0){vm=11;vy--;}updateMois();};
+document.getElementById('next-m').onclick=function(){vm++;if(vm>11){vm=0;vy++;}updateMois();};
 
-document.getElementById('prev-month').addEventListener('click', function() {
-  viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} updateMonthLabel();
-});
-document.getElementById('next-month').addEventListener('click', function() {
-  viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} updateMonthLabel();
-});
+// INFO + USER BUTTONS
+document.getElementById('btn-info').onclick=function(){document.getElementById('iov').classList.add('open');};
+document.getElementById('iclose').onclick=function(){document.getElementById('iov').classList.remove('open');};
+document.getElementById('iov').onclick=function(e){if(e.target===this)this.classList.remove('open');};
+document.getElementById('btn-user').onclick=function(){showScreen('parametres');};
 
-// ============================================================
-// BOUTONS HEADER
-// ============================================================
-document.getElementById('btn-info').addEventListener('click', function() {
-  document.getElementById('info-overlay').classList.add('open');
-});
-document.getElementById('info-close').addEventListener('click', function() {
-  document.getElementById('info-overlay').classList.remove('open');
-});
-document.getElementById('info-overlay').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
-});
-
-document.getElementById('btn-user').addEventListener('click', function() {
-  showScreen('parametres');
-});
-
-// ============================================================
-// GRILLE TRAJETS
-// ============================================================
-function buildGrid() {
-  const grid = document.getElementById('tgrid');
-  grid.innerHTML = '';
-  trajets.forEach(function(t, i) {
-    const btn = document.createElement('button');
-    btn.className = 'tbtn';
-    btn.innerHTML = '<div class="tr">'+t.label+'</div><div class="tk">'+t.km+' km</div>';
-    btn.addEventListener('click', function() { addEntry(t.label, t.km); });
+// GRILLE
+function buildGrid(){
+  var grid=document.getElementById('tgrid');
+  grid.innerHTML='';
+  trajets.forEach(function(t){
+    var btn=document.createElement('button');
+    btn.className='tbtn';
+    btn.innerHTML='<div class="tr">'+t.label+'</div><div class="tk">'+t.km+' km</div>';
+    btn.onclick=(function(tl,tk){return function(){addEntry(tl,tk);};})(t.label,t.km);
     grid.appendChild(btn);
   });
-  const autre = document.createElement('button');
-  autre.className = 'tbtn autre';
-  autre.innerHTML = '<div class="tr">Autre trajet</div><div class="tk">distance libre</div>';
-  autre.addEventListener('click', function() {
-    document.getElementById('autre-form').classList.toggle('visible');
-  });
+  var autre=document.createElement('button');
+  autre.className='tbtn autre';
+  autre.innerHTML='<div class="tr">Autre trajet</div><div class="tk">distance libre</div>';
+  autre.onclick=function(){document.getElementById('aform').classList.toggle('vis');};
   grid.appendChild(autre);
 }
 
-// ============================================================
-// AJOUT ENTRÉE
-// ============================================================
-function addEntry(label, km) {
-  const date = document.getElementById('date-inp').value || today();
-  entries.push({ date: date, label: label, km: km });
-  entries.sort(function(a,b){ return b.date.localeCompare(a.date); });
+function addEntry(label,km){
+  var date=document.getElementById('dinp').value||toToday();
+  entries.push({date:date,label:label,km:km});
+  entries.sort(function(a,b){return b.date.localeCompare(a.date);});
   saveData();
-  toast('✓ '+label+' — '+km+' km', 'ok');
+  showToast(label+' — '+km+' km','ok');
 }
 
-document.getElementById('a-confirm').addEventListener('click', function() {
-  const desc = document.getElementById('a-desc').value.trim();
-  const km   = parseFloat(document.getElementById('a-km').value);
-  if (!desc) { toast('Ajoute une description'); return; }
-  if (!km || km <= 0) { toast('Ajoute les kilomètres'); return; }
-  addEntry(desc, km);
-  document.getElementById('a-desc').value = '';
-  document.getElementById('a-km').value = '';
-  document.getElementById('autre-form').classList.remove('visible');
-});
+document.getElementById('a-confirm').onclick=function(){
+  var desc=document.getElementById('a-desc').value.trim();
+  var km=parseFloat(document.getElementById('a-km').value);
+  if(!desc){showToast('Ajoute une description');return;}
+  if(!km||km<=0){showToast('Ajoute les kilometres');return;}
+  addEntry(desc,km);
+  document.getElementById('a-desc').value='';
+  document.getElementById('a-km').value='';
+  document.getElementById('aform').classList.remove('vis');
+};
 
-// ============================================================
 // HISTORIQUE
-// ============================================================
-function renderHistory() {
-  const ym  = ymStr();
-  const me  = entries.filter(function(e){ return e.date.startsWith(ym); });
-  const km  = me.reduce(function(s,e){ return s+e.km; }, 0);
-  const remb = km * kmIndex;
-  document.getElementById('s-count').textContent = me.length;
-  document.getElementById('s-km').textContent = km;
-  document.getElementById('s-remb').textContent = remb.toFixed(2).replace('.',',')+' €';
-  document.getElementById('remb-amt').textContent = remb.toFixed(2).replace('.',',')+' €';
-  document.getElementById('remb-detail').textContent = km+' km × '+kmIndex.toFixed(4).replace('.',',')+' €/km';
-  document.getElementById('hist-title').textContent = MONTHS[viewMonth]+' '+viewYear;
-  document.getElementById('mail-to').value = mailTo;
-  const list = document.getElementById('elist');
-  list.innerHTML = '';
-  if (me.length === 0) {
-    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div>Aucun trajet ce mois-ci</div>';
-    return;
-  }
-  me.forEach(function(e) {
-    const idx = entries.indexOf(e);
-    const div = document.createElement('div');
-    div.className = 'eitem';
-    div.innerHTML = '<div style="flex:1"><div class="edate">'+fmtDate(e.date)+'</div><div class="eroute">'+e.label+'</div></div><span class="ekm">'+e.km+' km</span>';
-    const del = document.createElement('button');
-    del.className = 'edel';
-    del.textContent = '×';
-    del.addEventListener('click', function() { entries.splice(idx,1); saveData(); renderHistory(); });
-    div.appendChild(del);
+function renderHistory(){
+  var ym=ymStr();
+  var me=entries.filter(function(e){return e.date.startsWith(ym);});
+  var km=me.reduce(function(s,e){return s+e.km;},0);
+  var remb=km*kmIdx;
+  document.getElementById('s-cnt').textContent=me.length;
+  document.getElementById('s-km').textContent=km;
+  document.getElementById('s-remb').textContent=remb.toFixed(2).replace('.',',')+' E';
+  document.getElementById('r-amt').textContent=remb.toFixed(2).replace('.',',')+' E';
+  document.getElementById('r-detail').textContent=km+' km x '+kmIdx.toFixed(4).replace('.',',')+' E/km';
+  document.getElementById('hist-lbl').textContent=MOIS[vm]+' '+vy;
+  document.getElementById('mail-to').value=mailTo;
+  var list=document.getElementById('elist');
+  list.innerHTML='';
+  if(me.length===0){list.innerHTML='<div class="empty"><div class="ei">&#128219;</div>Aucun trajet ce mois-ci</div>';return;}
+  me.forEach(function(e){
+    var idx=entries.indexOf(e);
+    var div=document.createElement('div');
+    div.className='eitem';
+    var info=document.createElement('div');
+    info.style.flex='1';
+    info.innerHTML='<div class="edate">'+fmtD(e.date)+'</div><div class="eroute">'+e.label+'</div>';
+    var ekm=document.createElement('span');
+    ekm.className='ekm';
+    ekm.textContent=e.km+' km';
+    var del=document.createElement('button');
+    del.className='edel';
+    del.textContent='x';
+    del.onclick=(function(i){return function(){entries.splice(i,1);saveData();renderHistory();};})(idx);
+    div.appendChild(info);div.appendChild(ekm);div.appendChild(del);
     list.appendChild(div);
   });
 }
 
-// ============================================================
 // ENVOI MAIL
-// ============================================================
-document.getElementById('send-btn').addEventListener('click', function() {
-  const ym  = ymStr();
-  const me  = entries.filter(function(e){ return e.date.startsWith(ym); });
-  const to  = document.getElementById('mail-to').value.trim();
-  if (me.length === 0) { toast('Aucun trajet à envoyer'); return; }
-  if (!to) { toast('Indique une adresse e-mail'); return; }
-  const totalKm   = me.reduce(function(s,e){ return s+e.km; },0);
-  const totalRemb = (totalKm * kmIndex).toFixed(2).replace('.',',');
-  let msg = 'Relevé kilométrique — '+document.getElementById('user-label').textContent+'\n'+MONTHS[viewMonth]+' '+viewYear+'\n\n';
-  me.forEach(function(e){ msg += fmtDate(e.date)+'  |  '+e.label+'  |  '+e.km+' km\n'; });
-  msg += '\nTOTAL : '+totalKm+' km\nIndex : '+kmIndex.toFixed(4).replace('.',',')+' €/km\nREMBOURSEMENT : '+totalRemb+' €';
-  const btn = document.getElementById('send-btn');
-  btn.disabled = true; btn.textContent = 'Envoi en cours…';
-  emailjs.init(EMAILJS_KEY);
-  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
-    to_email: to,
-    subject: 'Relevé km — '+document.getElementById('user-label').textContent+' — '+MONTHS[viewMonth]+' '+viewYear,
-    message: msg
-  }).then(function() {
-    toast('✓ Mail envoyé !', 'ok');
-    btn.disabled = false; btn.textContent = '📧 Envoyer par e-mail';
-  }).catch(function(err) {
-    toast('Erreur d\'envoi', 'err');
-    console.error(err);
-    btn.disabled = false; btn.textContent = '📧 Envoyer par e-mail';
-  });
-});
+document.getElementById('send-btn').onclick=function(){
+  var ym=ymStr();
+  var me=entries.filter(function(e){return e.date.startsWith(ym);});
+  var to=document.getElementById('mail-to').value.trim();
+  if(me.length===0){showToast('Aucun trajet a envoyer');return;}
+  if(!to){showToast('Indique une adresse e-mail');return;}
+  var totalKm=me.reduce(function(s,e){return s+e.km;},0);
+  var totalRemb=(totalKm*kmIdx).toFixed(2).replace('.',',');
+  var name=document.getElementById('ulbl').textContent;
+  var msg='Releve kilometrique — '+name+'\n'+MOIS[vm]+' '+vy+'\n\n';
+  me.forEach(function(e){msg+=fmtD(e.date)+'  |  '+e.label+'  |  '+e.km+' km\n';});
+  msg+='\nTOTAL : '+totalKm+' km\nIndex : '+kmIdx.toFixed(4)+' E/km\nREMBOURSEMENT : '+totalRemb+' E';
+  var btn=document.getElementById('send-btn');
+  btn.disabled=true;btn.textContent='Envoi en cours...';
+  emailjs.init(EJK);
+  emailjs.send(EJS,EJT,{to_email:to,subject:'Releve km — '+name+' — '+MOIS[vm]+' '+vy,message:msg})
+  .then(function(){showToast('Mail envoye !','ok');btn.disabled=false;btn.textContent='Envoyer par e-mail';})
+  .catch(function(e){showToast('Erreur envoi','err');console.error(e);btn.disabled=false;btn.textContent='Envoyer par e-mail';});
+};
 
-// ============================================================
-// GÉNÉRATION XLS
-// ============================================================
-document.getElementById('xls-btn').addEventListener('click', function() {
-  const ym = ymStr();
-  const me = entries.filter(function(e){ return e.date.startsWith(ym); });
-  if (me.length === 0) { toast('Aucun trajet ce mois-ci'); return; }
-  const totalKm = me.reduce(function(s,e){ return s+e.km; },0);
-  const name = document.getElementById('user-label').textContent;
-  const rows = [
+// XLS
+document.getElementById('xls-btn').onclick=function(){
+  var ym=ymStr();
+  var me=entries.filter(function(e){return e.date.startsWith(ym);});
+  if(me.length===0){showToast('Aucun trajet ce mois-ci');return;}
+  var totalKm=me.reduce(function(s,e){return s+e.km;},0);
+  var name=document.getElementById('ulbl').textContent;
+  var rows=[
     ['','','','','',new Date()],
-    ['Note de remboursement'],
-    [],
-    ['La Commune de NANDRIN doit à :'],
-    ['NOM - Prénom', name],
-    ['Adresse',''],
-    ['Compte n°',''],
-    ['TOTAL', totalKm*kmIndex, '€', 'Signature'],
-    ['T. horaire du 01/04/26 au 30/06/26','','',kmIndex],
-    ['', totalKm, 'KM'],
-    ['En remboursement de frais à charge'],
-    ['Date','DETAILS CALCULS + LIEU','','','','KM'],
+    ['Note de remboursement'],[],
+    ['La Commune de NANDRIN doit a :'],
+    ['NOM - Prenom',name],['Adresse',''],['Compte n',''],
+    ['TOTAL',totalKm*kmIdx,'E','Signature'],
+    ['T. horaire du 01/04/26 au 30/06/26','','',kmIdx],
+    ['',totalKm,'KM'],
+    ['En remboursement de frais a charge'],
+    ['Date','DETAILS CALCULS + LIEU','','','','KM']
   ];
-  me.forEach(function(e){ rows.push([e.date, e.label,'','','',e.km]); });
+  me.forEach(function(e){rows.push([e.date,e.label,'','','',e.km]);});
   rows.push([]);
-  rows.push(['','TOTAL '+MONTHS[viewMonth]+' '+viewYear,'','','',totalKm]);
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:12},{wch:35},{wch:8},{wch:8},{wch:12},{wch:8}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Feuil1');
-  XLSX.writeFile(wb, 'Remboursement_'+name+'_'+MONTHS[viewMonth]+'_'+viewYear+'.xlsx');
-  toast('✓ Fichier XLS généré !', 'ok');
-});
+  rows.push(['','TOTAL '+MOIS[vm]+' '+vy,'','','',totalKm]);
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:12},{wch:35},{wch:8},{wch:8},{wch:12},{wch:8}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Feuil1');
+  XLSX.writeFile(wb,'Remboursement_'+name+'_'+MOIS[vm]+'_'+vy+'.xlsx');
+  showToast('Fichier XLS genere !','ok');
+};
 
-// ============================================================
-// PARAMÈTRES
-// ============================================================
-function renderParams() {
-  document.getElementById('p-email').value = mailTo;
-  document.getElementById('p-index').value = kmIndex;
-  const list = document.getElementById('plist');
-  list.innerHTML = '';
-  trajets.forEach(function(t, i) {
-    const div = document.createElement('div');
-    div.className = 'pitem';
-    div.draggable = true;
-    div.dataset.idx = i;
-    const hdl = document.createElement('div');
-    hdl.className = 'draghdl';
-    hdl.innerHTML = '<span></span><span></span><span></span>';
-    const lbl = document.createElement('span');
-    lbl.className = 'plabel';
-    lbl.textContent = t.label;
-    const km = document.createElement('span');
-    km.className = 'pkm';
-    km.textContent = t.km+' km';
-    const ed = document.createElement('button');
-    ed.className = 'pedit';
-    ed.textContent = '✎';
-    ed.addEventListener('click', function() { openModal(i); });
-    div.appendChild(hdl); div.appendChild(lbl); div.appendChild(km); div.appendChild(ed);
-    div.addEventListener('dragstart', function(e) { dragSrc=i; setTimeout(function(){div.classList.add('dragging');},0); e.dataTransfer.effectAllowed='move'; });
-    div.addEventListener('dragend', function() { div.classList.remove('dragging'); document.querySelectorAll('.pitem').forEach(function(el){el.classList.remove('dragover');}); });
-    div.addEventListener('dragover', function(e) { e.preventDefault(); document.querySelectorAll('.pitem').forEach(function(el){el.classList.remove('dragover');}); div.classList.add('dragover'); });
-    div.addEventListener('drop', function(e) {
-      e.preventDefault();
-      const ti = parseInt(div.dataset.idx);
-      if (dragSrc === ti) return;
-      const moved = trajets.splice(dragSrc,1)[0];
-      trajets.splice(ti,0,moved);
-      saveData(); buildGrid(); renderParams();
-    });
+// PARAMS
+function renderParams(){
+  document.getElementById('p-email').value=mailTo;
+  document.getElementById('p-idx').value=kmIdx;
+  var list=document.getElementById('plist');
+  list.innerHTML='';
+  trajets.forEach(function(t,i){
+    var div=document.createElement('div');
+    div.className='pitem';div.draggable=true;div.dataset.idx=i;
+    var hdl=document.createElement('div');hdl.className='dhdl';
+    hdl.innerHTML='<span></span><span></span><span></span>';
+    var lbl=document.createElement('span');lbl.className='plbl';lbl.textContent=t.label;
+    var km=document.createElement('span');km.className='pkm';km.textContent=t.km+' km';
+    var ed=document.createElement('button');ed.className='pedit';ed.textContent='✎';
+    ed.onclick=(function(idx){return function(){openModal(idx);};})(i);
+    div.appendChild(hdl);div.appendChild(lbl);div.appendChild(km);div.appendChild(ed);
+    div.addEventListener('dragstart',function(e){dragSrc=i;setTimeout(function(){div.classList.add('dragging');},0);e.dataTransfer.effectAllowed='move';});
+    div.addEventListener('dragend',function(){div.classList.remove('dragging');document.querySelectorAll('.pitem').forEach(function(el){el.classList.remove('dragover');});});
+    div.addEventListener('dragover',function(e){e.preventDefault();document.querySelectorAll('.pitem').forEach(function(el){el.classList.remove('dragover');});div.classList.add('dragover');});
+    div.addEventListener('drop',function(e){e.preventDefault();var ti=parseInt(div.dataset.idx);if(dragSrc===ti)return;var moved=trajets.splice(dragSrc,1)[0];trajets.splice(ti,0,moved);saveData();buildGrid();renderParams();});
     list.appendChild(div);
   });
 }
 
-document.getElementById('p-add').addEventListener('click', function() {
-  const label = document.getElementById('p-label').value.trim();
-  const km    = parseFloat(document.getElementById('p-km').value);
-  if (!label) { toast('Ajoute un libellé'); return; }
-  if (!km || km<=0) { toast('Ajoute les kilomètres'); return; }
-  trajets.push({label:label, km:km});
-  saveData(); buildGrid(); renderParams();
-  document.getElementById('p-label').value='';
+document.getElementById('p-add').onclick=function(){
+  var lbl=document.getElementById('p-lbl').value.trim();
+  var km=parseFloat(document.getElementById('p-km').value);
+  if(!lbl){showToast('Ajoute un libelle');return;}
+  if(!km||km<=0){showToast('Ajoute les kilometres');return;}
+  trajets.push({label:lbl,km:km});
+  saveData();buildGrid();renderParams();
+  document.getElementById('p-lbl').value='';
   document.getElementById('p-km').value='';
-  toast('Trajet ajouté','ok');
-});
+  showToast('Trajet ajoute','ok');
+};
 
-document.getElementById('p-save-index').addEventListener('click', function() {
-  const val = parseFloat(document.getElementById('p-index').value);
-  if (!val || val<=0) { toast('Index invalide'); return; }
-  kmIndex = val;
-  localStorage.setItem(ukey('index'), val);
-  toast('Index mis à jour — '+val.toFixed(4).replace('.',',')+' €/km','ok');
-});
+document.getElementById('p-save-idx').onclick=function(){
+  var val=parseFloat(document.getElementById('p-idx').value);
+  if(!val||val<=0){showToast('Index invalide');return;}
+  kmIdx=val;localStorage.setItem(ukey('idx'),val);
+  showToast('Index mis a jour','ok');
+};
 
-document.getElementById('p-save-email').addEventListener('click', function() {
-  mailTo = document.getElementById('p-email').value.trim();
-  localStorage.setItem('km_user_'+currentUser+'_email', mailTo);
-  document.getElementById('mail-to').value = mailTo;
-  toast('Adresse enregistrée','ok');
-});
+document.getElementById('p-save-email').onclick=function(){
+  mailTo=document.getElementById('p-email').value.trim();
+  localStorage.setItem('km2_u_'+uid+'_email',mailTo);
+  document.getElementById('mail-to').value=mailTo;
+  showToast('Adresse enregistree','ok');
+};
 
-document.getElementById('p-save-pwd').addEventListener('click', function() {
-  const old  = document.getElementById('p-oldpwd').value;
-  const newp = document.getElementById('p-newpwd').value;
-  const stored = localStorage.getItem('km_user_'+currentUser+'_pwd');
-  if (hash(old) !== stored) { toast('Mot de passe actuel incorrect','err'); return; }
-  if (newp.length < 4) { toast('Nouveau mot de passe trop court','err'); return; }
-  localStorage.setItem('km_user_'+currentUser+'_pwd', hash(newp));
+document.getElementById('p-save-pwd').onclick=function(){
+  var old=document.getElementById('p-oldpwd').value;
+  var newp=document.getElementById('p-newpwd').value;
+  var stored=localStorage.getItem('km2_u_'+uid+'_pwd');
+  if(hsh(old)!==stored){showToast('Mot de passe actuel incorrect','err');return;}
+  if(newp.length<4){showToast('Nouveau mot de passe trop court','err');return;}
+  localStorage.setItem('km2_u_'+uid+'_pwd',hsh(newp));
   document.getElementById('p-oldpwd').value='';
   document.getElementById('p-newpwd').value='';
-  toast('Mot de passe modifié','ok');
-});
+  showToast('Mot de passe modifie','ok');
+};
 
-document.getElementById('p-logout').addEventListener('click', function() {
-  currentUser = null;
-  localStorage.removeItem('km_last_uid');
+document.getElementById('p-logout').onclick=function(){
+  uid=null;
+  localStorage.removeItem('km2_last');
   document.getElementById('li-name').value='';
   document.getElementById('li-pwd').value='';
-  document.getElementById('li-error').style.display='none';
-  showOnly('screen-login');
-});
+  document.getElementById('li-err').style.display='none';
+  showOnly('sc-login');
+};
 
-// ============================================================
-// MODAL EDIT
-// ============================================================
-function openModal(idx) {
-  editIdx = idx;
-  document.getElementById('m-label').value = trajets[idx].label;
-  document.getElementById('m-km').value    = trajets[idx].km;
+// MODAL
+function openModal(idx){
+  editIdx=idx;
+  document.getElementById('m-lbl').value=trajets[idx].label;
+  document.getElementById('m-km').value=trajets[idx].km;
   document.getElementById('modal').classList.add('open');
 }
-
-document.getElementById('m-cancel').addEventListener('click', function() {
+document.getElementById('m-cancel').onclick=function(){document.getElementById('modal').classList.remove('open');};
+document.getElementById('modal').onclick=function(e){if(e.target===this)this.classList.remove('open');};
+document.getElementById('m-save').onclick=function(){
+  var lbl=document.getElementById('m-lbl').value.trim();
+  var km=parseFloat(document.getElementById('m-km').value);
+  if(!lbl||!km){showToast('Champs incomplets');return;}
+  trajets[editIdx]={label:lbl,km:km};
+  saveData();buildGrid();renderParams();
   document.getElementById('modal').classList.remove('open');
-});
-document.getElementById('modal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
-});
-document.getElementById('m-save').addEventListener('click', function() {
-  const label = document.getElementById('m-label').value.trim();
-  const km    = parseFloat(document.getElementById('m-km').value);
-  if (!label || !km) { toast('Champs incomplets'); return; }
-  trajets[editIdx] = {label:label, km:km};
-  saveData(); buildGrid(); renderParams();
-  document.getElementById('modal').classList.remove('open');
-  toast('Trajet modifié');
-});
-document.getElementById('m-del').addEventListener('click', function() {
+  showToast('Trajet modifie');
+};
+document.getElementById('m-del').onclick=function(){
   trajets.splice(editIdx,1);
-  saveData(); buildGrid(); renderParams();
+  saveData();buildGrid();renderParams();
   document.getElementById('modal').classList.remove('open');
-  toast('Trajet supprimé
+  showToast('Trajet supprime');
+};
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(e){console.log('SW:',e);});
+  });
+}
+</script>
+</body>
+</html>
